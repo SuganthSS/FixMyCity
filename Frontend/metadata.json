@@ -1,0 +1,7 @@
+{
+  "name": "FixMyCity",
+  "description": "A comprehensive civic issue tracking and automated routing platform for citizens and administrators.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
