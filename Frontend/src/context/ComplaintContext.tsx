@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Complaint, ComplaintStatus, Priority, Department } from '../types';
 import { complaintApi } from '../services/complaintApi';
+import { useAuth } from './AuthContext';
 
 interface ComplaintContextType {
   complaints: Complaint[];
@@ -10,6 +11,7 @@ interface ComplaintContextType {
   updateComplaintPriority: (id: string, priority: Priority) => void;
   refreshComplaints: () => Promise<void>;
   loading: boolean;
+  error: string | null;
 }
 
 const ComplaintContext = createContext<ComplaintContextType | undefined>(undefined);
@@ -41,26 +43,34 @@ const mapComplaint = (c: any): Complaint => ({
 export const ComplaintProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
 
   const refreshComplaints = useCallback(async () => {
     const token = localStorage.getItem('fixmycity_token');
     if (!token) return;
 
     setLoading(true);
+    setError(null);
     try {
       const data = await complaintApi.getComplaints();
       setComplaints(Array.isArray(data) ? data.map(mapComplaint) : []);
-    } catch (error) {
-      console.error('Failed to fetch complaints:', error);
+    } catch (err: any) {
+      console.error('Failed to fetch complaints:', err);
+      setError('Failed to fetch complaints. Please try again.');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Load complaints on mount and when token changes
+  // Load complaints when authenticated status changes
   useEffect(() => {
-    refreshComplaints();
-  }, [refreshComplaints]);
+    if (isAuthenticated) {
+      refreshComplaints();
+    } else {
+      setComplaints([]);
+    }
+  }, [isAuthenticated, refreshComplaints]);
 
   const addComplaint = async (newComplaintData: Omit<Complaint, 'id' | 'createdAt' | 'updatedAt' | 'timeline' | 'status'>) => {
     try {
@@ -129,6 +139,7 @@ export const ComplaintProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       updateComplaintPriority,
       refreshComplaints,
       loading,
+      error,
     }}>
       {children}
     </ComplaintContext.Provider>

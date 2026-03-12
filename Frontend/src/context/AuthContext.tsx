@@ -6,7 +6,7 @@ import { adminApi } from '../services/adminApi';
 interface AuthContextType {
   user: User | null;
   users: User[];
-  login: (email: string, password: string, role: UserRole) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string; role?: UserRole }>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
@@ -59,20 +59,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, fetchUsers]);
 
-  const login = async (email: string, password: string, role: UserRole) => {
+  const login = async (email: string, password: string) => {
     try {
       const data = await authApi.login(email, password);
-
-      // Verify the role matches what user selected
-      if (data.role !== role) {
-        return { success: false, message: `This account is registered as ${data.role}, not ${role}.` };
-      }
 
       const mappedUser = mapUser(data);
       localStorage.setItem('fixmycity_token', data.token);
       localStorage.setItem('fixmycity_user', JSON.stringify(mappedUser));
       setUser(mappedUser);
-      return { success: true };
+      return { success: true, role: mappedUser.role };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Login failed. Please try again.';
       return { success: false, message };

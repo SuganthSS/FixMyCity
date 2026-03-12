@@ -43,10 +43,10 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-3xl mx-auto text-center">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
               <Badge variant="UNDER_REVIEW" className="mb-6">Public Beta</Badge>
@@ -56,7 +56,7 @@ export const LandingPage: React.FC = () => {
               <p className="text-xl text-zinc-600 mb-10 leading-relaxed">
                 Report infrastructure issues in your city such as potholes, broken streetlights, garbage problems, or water leaks. Track the progress of your complaint and help keep your city clean.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap justify-center gap-4">
                 <Link to="/login">
                   <Button size="lg" className="h-14 px-8 text-lg">
                     Get Started
@@ -69,22 +69,6 @@ export const LandingPage: React.FC = () => {
                   </Button>
                 </Link>
               </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="absolute -inset-4 bg-orange-100/50 rounded-[2rem] blur-2xl -z-10" />
-              <Card className="p-2 bg-zinc-50 border-zinc-200">
-                <img 
-                  src="https://picsum.photos/seed/city/800/600" 
-                  alt="City Infrastructure" 
-                  className="rounded-xl shadow-2xl"
-                  referrerPolicy="no-referrer"
-                />
-              </Card>
             </motion.div>
           </div>
         </div>

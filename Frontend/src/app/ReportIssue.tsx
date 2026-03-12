@@ -25,6 +25,8 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41]
 });
 
+const INDIA_BOUNDS: L.LatLngBoundsExpression = [[6.0, 68.0], [36.0, 98.0]];
+
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const LocationMarker = ({ position, setPosition, setLocation }: {
@@ -35,9 +37,13 @@ const LocationMarker = ({ position, setPosition, setLocation }: {
   const map = useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
-      setPosition([lat, lng]);
-      // Reverse geocoding would go here, for now just use coordinates
-      setLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      const bounds = L.latLngBounds(INDIA_BOUNDS);
+      if (bounds.contains(e.latlng)) {
+        setPosition([lat, lng]);
+        setLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      } else {
+        alert("Please select a location within India.");
+      }
     },
   });
 
@@ -95,8 +101,15 @@ export const ReportIssuePage: React.FC = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
         const { latitude, longitude } = pos.coords;
-        setCoords([latitude, longitude]);
-        setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        const latlng = L.latLng(latitude, longitude);
+        const bounds = L.latLngBounds(INDIA_BOUNDS);
+        
+        if (bounds.contains(latlng)) {
+          setCoords([latitude, longitude]);
+          setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        } else {
+          alert("Your current location is outside India. Please select a location on the map manually.");
+        }
       });
     }
   };
@@ -198,10 +211,20 @@ export const ReportIssuePage: React.FC = () => {
                 </button>
               </div>
               <div className="h-[400px] rounded-2xl overflow-hidden border border-zinc-200 z-0 relative">
-                <MapContainer center={[51.505, -0.09]} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+                <MapContainer 
+                  center={[20.5937, 78.9629]} 
+                  zoom={5} 
+                  minZoom={4}
+                  maxBounds={INDIA_BOUNDS}
+                  maxBoundsViscosity={1.0}
+                  scrollWheelZoom={false} 
+                  style={{ height: '100%', width: '100%' }}
+                >
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    noWrap={true}
+                    bounds={INDIA_BOUNDS}
                   />
                   <LocationMarker position={coords} setPosition={setCoords} setLocation={setLocation} />
                   <RecenterMap position={coords} />

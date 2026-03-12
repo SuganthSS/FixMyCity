@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertCircle, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { AlertCircle, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 import { Button, Input, Label, Card } from '../components/UI';
@@ -9,7 +9,7 @@ import { motion } from 'motion/react';
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.CITIZEN);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -17,10 +17,10 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const result = await login(email, password, role);
+    const result = await login(email, password);
     if (result.success) {
-      if (role === UserRole.ADMIN) navigate('/admin/dashboard');
-      else if (role === UserRole.STAFF) navigate('/staff/dashboard');
+      if (result.role === UserRole.ADMIN) navigate('/admin/dashboard');
+      else if (result.role === UserRole.STAFF) navigate('/staff/dashboard');
       else navigate('/dashboard');
     } else {
       setError(result.message || 'Login failed');
@@ -50,32 +50,6 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="flex bg-zinc-50 p-1 rounded-xl mb-6">
-              <button
-                type="button"
-                onClick={() => setRole(UserRole.CITIZEN)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.CITIZEN ? 'bg-white text-[#F27D26] shadow-sm' : 'text-zinc-500'
-                  }`}
-              >
-                Citizen
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole(UserRole.STAFF)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.STAFF ? 'bg-white text-[#F27D26] shadow-sm' : 'text-zinc-500'
-                  }`}
-              >
-                Staff
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole(UserRole.ADMIN)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.ADMIN ? 'bg-white text-[#F27D26] shadow-sm' : 'text-zinc-500'
-                  }`}
-              >
-                Admin
-              </button>
-            </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="email">Email Address</Label>
@@ -102,13 +76,20 @@ export const LoginPage: React.FC = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -137,8 +118,10 @@ export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>(UserRole.CITIZEN);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -242,13 +225,20 @@ export const RegisterPage: React.FC = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -258,13 +248,20 @@ export const RegisterPage: React.FC = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <Input
                   id="confirm"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

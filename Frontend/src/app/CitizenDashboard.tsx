@@ -27,7 +27,30 @@ const chartData = [
 
 export const CitizenDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { complaints } = useComplaints();
+  const { complaints, loading, error, refreshComplaints } = useComplaints();
+
+  if (loading && complaints.length === 0) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+        <div className="text-center space-y-4">
+          <div className="w-10 h-10 border-4 border-[#F27D26] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-zinc-500 font-medium">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && complaints.length === 0) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+        <div className="text-center space-y-4 max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+          <p className="text-red-600 font-medium">{error}</p>
+          <Button onClick={refreshComplaints} variant="outline" className="mt-4">Try Again</Button>
+        </div>
+      </div>
+    );
+  }
 
   const myComplaints = complaints.filter(c => c.citizenId === user?.id);
 

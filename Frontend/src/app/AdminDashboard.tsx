@@ -1,26 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle,
   CheckCircle2,
   Clock,
   BarChart3,
-  Users,
-  ArrowUpRight,
   TrendingUp,
   TrendingDown,
   MoreVertical,
-  MapPin,
-  UserCheck,
-  UserX,
-  Shield,
-  ShieldAlert
+  MapPin
 } from 'lucide-react';
-import { ComplaintStatus, Priority, UserRole, User } from '../types';
-import { Card, Badge, Button, Input } from '../components/UI';
+import { ComplaintStatus, Priority } from '../types';
+import { Card, Badge, Button } from '../components/UI';
 import { motion } from 'motion/react';
 import { useComplaints } from '../context/ComplaintContext';
-import { useAuth } from '../context/AuthContext';
+import { cn } from '../lib/utils';
 import {
   BarChart,
   Bar,
@@ -37,9 +31,30 @@ import {
 const COLORS = ['#F27D26', '#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B'];
 
 export const AdminDashboard: React.FC = () => {
-  const { complaints } = useComplaints();
-  const { users, updateOtherUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'staff'>('overview');
+  const { complaints, loading, error, refreshComplaints } = useComplaints();
+
+  if (loading && complaints.length === 0) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+        <div className="text-center space-y-4">
+          <div className="w-10 h-10 border-4 border-[#F27D26] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-zinc-500 font-medium">Loading admin console...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && complaints.length === 0) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+        <div className="text-center space-y-4 max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+          <p className="text-red-600 font-medium">{error}</p>
+          <Button onClick={refreshComplaints} variant="outline" className="mt-4">Try Again</Button>
+        </div>
+      </div>
+    );
+  }
 
   const stats = [
     { label: 'Total Complaints', value: complaints.length, icon: AlertCircle, color: 'text-zinc-600', bg: 'bg-zinc-100', trend: '+5.2%', isUp: true },
@@ -184,99 +199,6 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 
-  const renderUserManagement = (roleFilter: UserRole) => {
-    const filteredUsers = users.filter(u => u.role === roleFilter);
-
-    return (
-      <Card className="p-0 overflow-hidden">
-        <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-zinc-900">
-            {roleFilter === UserRole.STAFF ? 'Staff Management' : 'User Management'}
-          </h3>
-          <Badge className="bg-zinc-100 text-zinc-600">{filteredUsers.length} Total</Badge>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-zinc-50/50 border-b border-zinc-100">
-                <th className="px-6 py-4 font-bold text-zinc-900 text-sm">User</th>
-                <th className="px-6 py-4 font-bold text-zinc-900 text-sm">Status</th>
-                <th className="px-6 py-4 font-bold text-zinc-900 text-sm">Joined</th>
-                <th className="px-6 py-4 font-bold text-zinc-900 text-sm text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-zinc-50/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-100 shrink-0">
-                        <img src={u.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-zinc-900 text-sm">{u.name}</p>
-                        <p className="text-xs text-zinc-500">{u.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      {u.isBanned ? (
-                        <Badge className="bg-red-50 text-red-600 border-red-100">Banned</Badge>
-                      ) : u.role === UserRole.STAFF && !u.isApproved ? (
-                        <Badge className="bg-orange-50 text-orange-600 border-orange-100">Pending Approval</Badge>
-                      ) : (
-                        <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100">Active</Badge>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-zinc-500">
-                    {new Date(u.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {u.role === UserRole.STAFF && !u.isApproved && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="bg-emerald-600 hover:bg-emerald-700"
-                          onClick={() => updateOtherUser(u.id, { isApproved: true })}
-                        >
-                          <UserCheck className="w-4 h-4 mr-1.5" />
-                          Approve
-                        </Button>
-                      )}
-                      {u.isBanned ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateOtherUser(u.id, { isBanned: false })}
-                        >
-                          <Shield className="w-4 h-4 mr-1.5 text-emerald-600" />
-                          Re-enable
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:bg-red-50 border-red-100"
-                          onClick={() => updateOtherUser(u.id, { isBanned: true })}
-                        >
-                          <UserX className="w-4 h-4 mr-1.5" />
-                          Disable
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    );
-  };
-
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -284,42 +206,9 @@ export const AdminDashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Admin Console</h1>
           <p className="text-zinc-500 mt-1">Manage system operations, users, and complaints.</p>
         </div>
-        <div className="flex bg-zinc-100 p-1 rounded-xl">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={cn(
-              "px-4 py-2 text-sm font-bold rounded-lg transition-all",
-              activeTab === 'overview' ? "bg-white text-[#F27D26] shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-            )}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('users')}
-            className={cn(
-              "px-4 py-2 text-sm font-bold rounded-lg transition-all",
-              activeTab === 'users' ? "bg-white text-[#F27D26] shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-            )}
-          >
-            Citizens
-          </button>
-          <button
-            onClick={() => setActiveTab('staff')}
-            className={cn(
-              "px-4 py-2 text-sm font-bold rounded-lg transition-all",
-              activeTab === 'staff' ? "bg-white text-[#F27D26] shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-            )}
-          >
-            Staff
-          </button>
-        </div>
       </header>
 
-      {activeTab === 'overview' && renderOverview()}
-      {activeTab === 'users' && renderUserManagement(UserRole.CITIZEN)}
-      {activeTab === 'staff' && renderUserManagement(UserRole.STAFF)}
+      {renderOverview()}
     </div>
   );
 };
-
-import { cn } from '../lib/utils';

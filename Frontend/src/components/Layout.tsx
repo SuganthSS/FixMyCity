@@ -13,7 +13,9 @@ import {
   Search,
   Bell,
   MessageSquare,
-  Clock
+  Clock,
+  Map,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
@@ -36,12 +38,16 @@ export const Sidebar: React.FC = () => {
   const adminLinks = [
     { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Admin Dashboard' },
     { to: '/admin/complaints', icon: AlertCircle, label: 'Complaints Management' },
+    { to: '/admin/citizens', icon: Users, label: 'Citizens' },
+    { to: '/admin/staff', icon: Shield, label: 'Staff Management' },
+    { to: '/admin/map', icon: Map, label: 'Map View' },
     { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/profile', icon: User, label: 'Profile' },
   ];
 
   const staffLinks = [
     { to: '/staff/dashboard', icon: LayoutDashboard, label: 'Staff Dashboard' },
+    { to: '/staff/map', icon: Map, label: 'Map View' },
     { to: '/profile', icon: User, label: 'Profile' },
     { to: '/messages', icon: MessageSquare, label: 'Messages' },
   ];

@@ -15,7 +15,11 @@ import { MyComplaintsPage } from './app/MyComplaints';
 import { ComplaintDetailsPage } from './app/ComplaintDetails';
 import { AdminDashboard } from './app/AdminDashboard';
 import { StaffDashboard } from './app/StaffDashboard';
+import { StaffMapPage } from './app/StaffMapPage';
 import { AdminComplaintsPage } from './app/AdminComplaints';
+import { AdminMapPage } from './app/AdminMapPage';
+import { AdminUsersPage } from './app/AdminUsersPage';
+import { AdminStaffPage } from './app/AdminStaffPage';
 import { ProfilePage } from './app/Profile';
 import { HelpPage } from './app/HelpPage';
 import { MessageCenter } from './app/MessageCenter';
@@ -141,11 +145,21 @@ export default function App() {
             <Layout><StaffDashboard /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/staff/map" element={
+          <ProtectedRoute role={UserRole.STAFF}>
+            <Layout><StaffMapPage /></Layout>
+          </ProtectedRoute>
+        } />
 
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={
           <ProtectedRoute role={UserRole.ADMIN}>
             <Layout><AdminDashboard /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/map" element={
+          <ProtectedRoute role={UserRole.ADMIN}>
+            <Layout><AdminMapPage /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/admin/complaints" element={
@@ -158,9 +172,14 @@ export default function App() {
             <Layout><AnalyticsPage /></Layout>
           </ProtectedRoute>
         } />
-        <Route path="/admin/users" element={
+        <Route path="/admin/citizens" element={
           <ProtectedRoute role={UserRole.ADMIN}>
-            <Layout><div className="p-8 text-center text-zinc-500">User management coming soon...</div></Layout>
+            <Layout><AdminUsersPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/staff" element={
+          <ProtectedRoute role={UserRole.ADMIN}>
+            <Layout><AdminStaffPage /></Layout>
           </ProtectedRoute>
         } />
 
