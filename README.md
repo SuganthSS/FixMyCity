@@ -14,7 +14,7 @@
 ## 🌐 Live Demo
 
 - **Frontend:** [https://fix-my-city-nu.vercel.app](https://fix-my-city-nu.vercel.app)
-- **Backend API:** [https://fixmycity-backend-rlbx.onrender.com](https://fixmycity-backend-rlbx.onrender.com)
+- **Backend API:** [https://fixmycity-backend-rlbx.onrender.com](https://fixmycity-backend-rlbx.onrender.com)(API endpoint — not a user-facing URL)
 
 ---
 
