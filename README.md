@@ -338,7 +338,7 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Author
 
-- GitHub: [@SuganthSS](https://github.com/SuganthSS)
+- GitHub: [SuganthSS](https://github.com/SuganthSS)
 - Project: [FixMyCity](https://fix-my-city-nu.vercel.app)
 
 ---
