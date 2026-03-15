@@ -64,6 +64,22 @@ const complaintSchema = new mongoose.Schema({
       },
     },
   ],
+  upvotes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  landmark: {
+    type: String,
+  },
+  issueDate: {
+    type: Date,
+  },
+  recurringIssue: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });

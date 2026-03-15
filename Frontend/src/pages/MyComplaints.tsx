@@ -15,6 +15,7 @@ import { useComplaints } from '../context/ComplaintContext';
 import { ComplaintStatus, ComplaintCategory } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
 import { motion, AnimatePresence } from 'motion/react';
+import { getFullImageUrl } from '../lib/utils';
 
 export const MyComplaintsPage: React.FC = () => {
   const { user } = useAuth();
@@ -111,7 +112,7 @@ export const MyComplaintsPage: React.FC = () => {
                     <div className="flex flex-col md:flex-row gap-6 items-center">
                       <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden shrink-0">
                         <img
-                          src={complaint.imageUrl}
+                          src={getFullImageUrl(complaint.imageUrl)}
                           alt={complaint.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           referrerPolicy="no-referrer"

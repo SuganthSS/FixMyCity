@@ -5,6 +5,7 @@ import connectDB from './server/config/db.ts';
 import authRoutes from './server/routes/authRoutes.ts';
 import complaintRoutes from './server/routes/complaintRoutes.ts';
 import adminRoutes from './server/routes/adminRoutes.ts';
+import notificationRoutes from './server/routes/notificationRoutes.ts';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -45,6 +46,7 @@ async function startServer() {
   app.use('/api/auth', authRoutes);
   app.use('/api/complaints', complaintRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/notifications', notificationRoutes);
 
   // Health check
   app.get('/api/health', (req, res) => {

@@ -1,17 +1,38 @@
 import React, { useEffect } from 'react';
+import { MapPin, Info, ArrowUpRight, MessageSquare, Clock, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Complaint, ComplaintStatus } from '../types';
 import { Badge } from './UI';
 
-// Custom orange marker icon to match the app's brand
-const complaintIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+// Status Color Mapping
+const statusColorMap: Record<string, string> = {
+  SUBMITTED: '#F59E0B',
+  UNDER_REVIEW: '#3B82F6',
+  IN_PROGRESS: '#8B5CF6',
+  RESOLVED: '#10B981',
+  REJECTED: '#EF4444',
+};
+
+// Create a custom colored marker icon based on status
+const getStatusIcon = (status: string) => {
+  const color = statusColorMap[status] || '#94A3B8';
+  return L.divIcon({
+    html: `
+      <div class="relative flex items-center justify-center">
+        <div class="absolute w-8 h-8 rounded-full opacity-20 animate-ping" style="background-color: ${color}"></div>
+        <div class="relative w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center" style="background-color: ${color}">
+          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+        </div>
+      </div>
+    `,
+    className: '',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+};
 
 // Auto-fit bounds to all markers
 const FitBounds: React.FC<{ positions: [number, number][] }> = ({ positions }) => {
@@ -41,12 +62,6 @@ interface ComplaintsMapViewProps {
   showCitizenInfo?: boolean;
 }
 
-const statusColorMap: Record<string, string> = {
-  SUBMITTED: '#F27D26',
-  UNDER_REVIEW: '#8B5CF6',
-  ASSIGNED: '#3B82F6',
-  IN_PROGRESS: '#3B82F6',
-};
 
 export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
   complaints,
@@ -73,11 +88,8 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
   if (activeComplaints.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[500px] text-center">
-        <div className="w-16 h-16 bg-zinc-100 rounded-2xl flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-          </svg>
+        <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <MapPin className="w-6 h-6 text-[#2563EB]" />
         </div>
         <h3 className="text-lg font-bold text-zinc-900 mb-1">No Active Complaints on Map</h3>
         <p className="text-sm text-zinc-500 max-w-sm">
@@ -87,23 +99,30 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
     );
   }
 
+  const INDIA_BOUNDS: L.LatLngBoundsExpression = [[5.5, 66.0], [38.5, 99.0]];
+
   return (
-    <div className="h-[500px] rounded-2xl overflow-hidden border border-zinc-200 relative z-0">
+    <div className="h-[500px] rounded-2xl border-4 border-white shadow-premium relative z-0 group">
+      <div className="absolute inset-0 bg-slate-50 flex items-center justify-center z-50 transition-opacity duration-700 pointer-events-none opacity-0 group-[.loading]:opacity-100">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
       <MapContainer
-        center={defaultCenter}
+        bounds={INDIA_BOUNDS}
         zoom={5}
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
-        minZoom={4}
-        maxBounds={[[6.0, 68.0], [36.0, 98.0]]}
+        minZoom={5}
+        maxBounds={INDIA_BOUNDS}
         maxBoundsViscosity={1.0}
         worldCopyJump={false}
+        className="rounded-2xl"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png"
           noWrap={true}
-          bounds={[[6.0, 68.0], [36.0, 98.0]]}
+          bounds={INDIA_BOUNDS}
         />
         <FitBounds positions={positions} />
         <MapResizer />
@@ -112,65 +131,68 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
           <Marker
             key={complaint.id}
             position={[complaint.latitude!, complaint.longitude!]}
-            icon={complaintIcon}
+            icon={getStatusIcon(complaint.status)}
           >
-            <Popup maxWidth={320} minWidth={240}>
-              <div style={{ fontFamily: 'inherit', lineHeight: 1.5 }}>
-                <h4 style={{ margin: '0 0 6px', fontWeight: 700, fontSize: '14px', color: '#18181B' }}>
+            <Popup maxWidth={360} minWidth={280}>
+              <div className="p-5 font-sans">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant={complaint.status}>{complaint.status.replace('_', ' ')}</Badge>
+                  <Badge variant={complaint.priority}>{complaint.priority}</Badge>
+                </div>
+                
+                <h4 className="text-base font-bold text-slate-900 mb-2 leading-tight">
                   {complaint.title}
                 </h4>
-                <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#71717A' }}>
-                  {complaint.description.length > 120
-                    ? complaint.description.substring(0, 120) + '…'
-                    : complaint.description}
+                
+                <p className="text-xs text-slate-500 mb-4 line-clamp-2 leading-relaxed">
+                  {complaint.description}
                 </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '11px', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, color: '#52525B' }}>Category:</span>
-                  <span style={{ color: '#71717A' }}>{complaint.category}</span>
+
+                <div className="space-y-2.5 pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                    <span>{complaint.location || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <Clock className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Created {new Date(complaint.createdAt).toLocaleDateString()}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <AlertCircle className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Category: <span className="text-slate-600 ml-1">{complaint.category}</span></span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '11px', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, color: '#52525B' }}>Status:</span>
-                  <span style={{
-                    color: statusColorMap[complaint.status] || '#71717A',
-                    fontWeight: 600,
-                  }}>
-                    {complaint.status.replace('_', ' ')}
-                  </span>
+                
+                <div className="mt-5">
+                   <Link to={`/complaints/${complaint.id}`} className="block">
+                      <button className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
+                        View Details
+                      </button>
+                   </Link>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '11px', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, color: '#52525B' }}>Priority:</span>
-                  <span style={{
-                    color: complaint.priority === 'CRITICAL' ? '#EF4444' : complaint.priority === 'HIGH' ? '#F59E0B' : '#71717A',
-                    fontWeight: 600,
-                  }}>
-                    {complaint.priority}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '11px', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, color: '#52525B' }}>Department:</span>
-                  <span style={{ color: '#71717A' }}>{complaint.department || 'Unassigned'}</span>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '11px', marginBottom: showCitizenInfo ? '6px' : '0' }}>
-                  <span style={{ fontWeight: 600, color: '#52525B' }}>Location:</span>
-                  <span style={{ color: '#71717A' }}>{complaint.location || 'N/A'}</span>
-                </div>
-                {showCitizenInfo && (
-                  <>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '11px', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: 600, color: '#52525B' }}>Citizen Name:</span>
-                      <span style={{ color: '#71717A' }}>{complaint.citizenName || 'N/A'}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '11px' }}>
-                      <span style={{ fontWeight: 600, color: '#52525B' }}>Citizen ID:</span>
-                      <span style={{ color: '#71717A', fontFamily: 'monospace', fontSize: '10px' }}>{complaint.citizenId || 'N/A'}</span>
-                    </div>
-                  </>
-                )}
               </div>
             </Popup>
           </Marker>
         ))}
       </MapContainer>
+
+      {/* Floating Legend */}
+      <div className="absolute bottom-6 right-6 z-[400] bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-premium border border-white/50 space-y-3">
+        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
+          <Info className="w-3 h-3 text-blue-600" />
+          Status Legend
+        </h5>
+        <div className="grid grid-cols-1 gap-2">
+          {Object.entries(statusColorMap).map(([status, color]) => (
+            <div key={status} className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{status.replace('_', ' ')}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

@@ -13,8 +13,8 @@ export const HelpPage: React.FC = () => {
       <div className="space-y-6">
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 text-[#F27D26]" />
+            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+              <FileText className="w-5 h-5 text-[#2563EB]" />
             </div>
             <h2 className="text-xl font-bold text-zinc-900">How to report a complaint</h2>
           </div>

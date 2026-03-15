@@ -16,7 +16,7 @@ import { ComplaintStatus, Priority } from '../types';
 import { Card, Badge, Button } from '../components/UI';
 import { motion } from 'motion/react';
 import { useComplaints } from '../context/ComplaintContext';
-import { cn } from '../lib/utils';
+import { cn, getFullImageUrl } from '../lib/utils';
 import {
   BarChart,
   Bar,
@@ -168,7 +168,7 @@ export const AdminDashboard: React.FC = () => {
             <div key={complaint.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
-                  <img src={complaint.imageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={getFullImageUrl(complaint.imageUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div>
                   <h4 className="font-bold text-zinc-900">{complaint.title}</h4>

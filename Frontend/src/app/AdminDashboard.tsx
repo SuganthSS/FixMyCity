@@ -8,13 +8,14 @@ import {
   TrendingUp,
   TrendingDown,
   MoreVertical,
-  MapPin
+  MapPin,
+  ArrowUpRight
 } from 'lucide-react';
 import { ComplaintStatus, Priority } from '../types';
 import { Card, Badge, Button } from '../components/UI';
 import { motion } from 'motion/react';
 import { useComplaints } from '../context/ComplaintContext';
-import { cn } from '../lib/utils';
+import { cn, getFullImageUrl } from '../lib/utils';
 import {
   BarChart,
   Bar,
@@ -28,17 +29,32 @@ import {
   Cell
 } from 'recharts';
 
-const COLORS = ['#F27D26', '#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B'];
+const STATUS_COLORS: Record<string, string> = {
+  [ComplaintStatus.SUBMITTED]: '#F59E0B',
+  [ComplaintStatus.UNDER_REVIEW]: '#3B82F6',
+  [ComplaintStatus.IN_PROGRESS]: '#8B5CF6',
+  [ComplaintStatus.RESOLVED]: '#10B981',
+  [ComplaintStatus.REJECTED]: '#EF4444',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Road Issue': '#10B981',
+  'Streetlight Issue': '#3B82F6',
+  'Drainage Issue': '#8B5CF6',
+  'Water Leak': '#F59E0B',
+};
+
+const COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#0EA5E9'];
 
 export const AdminDashboard: React.FC = () => {
   const { complaints, loading, error, refreshComplaints } = useComplaints();
 
   if (loading && complaints.length === 0) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[50vh]">
-        <div className="text-center space-y-4">
-          <div className="w-10 h-10 border-4 border-[#F27D26] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-zinc-500 font-medium">Loading admin console...</p>
+      <div className="p-10 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-6">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-slate-500 font-bold tracking-tight">Loading admin console...</p>
         </div>
       </div>
     );
@@ -46,21 +62,23 @@ export const AdminDashboard: React.FC = () => {
 
   if (error && complaints.length === 0) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[50vh]">
-        <div className="text-center space-y-4 max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-          <p className="text-red-600 font-medium">{error}</p>
-          <Button onClick={refreshComplaints} variant="outline" className="mt-4">Try Again</Button>
-        </div>
+      <div className="p-10 flex items-center justify-center min-h-[60vh]">
+        <Card className="p-10 text-center space-y-6 max-w-md border border-rose-100 bg-rose-50/10">
+          <div className="w-16 h-16 bg-rose-100 rounded-3xl flex items-center justify-center mx-auto text-rose-500">
+             <AlertCircle className="w-8 h-8" />
+          </div>
+          <p className="text-rose-600 font-bold text-lg leading-snug">{error}</p>
+          <Button onClick={refreshComplaints} variant="danger" className="mt-4">Try Again</Button>
+        </Card>
       </div>
     );
   }
 
   const stats = [
-    { label: 'Total Complaints', value: complaints.length, icon: AlertCircle, color: 'text-zinc-600', bg: 'bg-zinc-100', trend: '+5.2%', isUp: true },
-    { label: 'Pending Review', value: complaints.filter(c => c.status === ComplaintStatus.SUBMITTED).length, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50', trend: '-2.1%', isUp: false },
-    { label: 'In Progress', value: complaints.filter(c => c.status === ComplaintStatus.IN_PROGRESS).length, icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%', isUp: true },
-    { label: 'Resolved', value: complaints.filter(c => c.status === ComplaintStatus.RESOLVED).length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', trend: '+8.4%', isUp: true },
+    { label: 'Total Complaints', value: complaints.length, icon: AlertCircle, color: 'text-blue-600', bg: 'bg-blue-50/50' },
+    { label: 'Pending Review', value: complaints.filter(c => c.status === ComplaintStatus.SUBMITTED).length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50/50' },
+    { label: 'In Progress', value: complaints.filter(c => c.status === ComplaintStatus.IN_PROGRESS).length, icon: BarChart3, color: 'text-blue-500', bg: 'bg-blue-50/30' },
+    { label: 'Resolved', value: complaints.filter(c => c.status === ComplaintStatus.RESOLVED).length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
   ];
 
   const categoryData = Object.values(complaints.reduce((acc: any, curr) => {
@@ -85,113 +103,138 @@ export const AdminDashboard: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
           >
-            <Card className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center', stat.bg)}>
-                  <stat.icon className={cn('w-6 h-6', stat.color)} />
-                </div>
-                <Badge className={cn(stat.isUp ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50')}>
-                  {stat.isUp ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                  {stat.trend}
-                </Badge>
-              </div>
-              <p className="text-sm font-medium text-zinc-500">{stat.label}</p>
-              <h3 className="text-2xl font-bold text-zinc-900 mt-1">{stat.value}</h3>
+            <Card className="p-8 h-full flex flex-col group relative overflow-hidden">
+               <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500', stat.bg)}>
+                  <stat.icon className={cn('w-7 h-7', stat.color)} />
+               </div>
+               <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+               <h3 className="text-4xl font-black text-slate-900 mt-1">{stat.value}</h3>
+               <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full -rotate-12" />
             </Card>
           </motion.div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-6">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-bold text-zinc-900">Complaints by Category</h3>
-            <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+        <Card className="lg:col-span-2 p-8 bg-white border-none shadow-premium hover:shadow-soft">
+          <div className="flex items-center justify-between mb-10">
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">Complaints by Category</h3>
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-50"><MoreVertical className="w-5 h-5 text-slate-400" /></Button>
           </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F4F4F5" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} />
-                <Tooltip
-                  cursor={{ fill: '#F8FAFC' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" fill="#F27D26" radius={[6, 6, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-[340px] w-full">
+            {categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryData}>
+                  <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#F1F5F9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94A3B8', fontWeight: 700 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94A3B8', fontWeight: 700 }} />
+                  <Tooltip
+                    cursor={{ fill: '#F8FAFC', radius: 12 }}
+                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.05)', padding: '16px' }}
+                  />
+                  <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={44}>
+                    {categoryData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name] || '#94A3B8'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                <BarChart3 className="w-12 h-12 mb-4 opacity-20" />
+                <p className="font-bold uppercase tracking-widest text-[10px]">No data available</p>
+              </div>
+            )}
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-bold text-zinc-900 mb-8">Status Distribution</h3>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 space-y-2">
-            {statusData.map((item: any, i) => (
-              <div key={item.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                  <span className="text-zinc-600">{item.name}</span>
-                </div>
-                <span className="font-bold text-zinc-900">{item.value}</span>
+        <Card className="p-8 flex flex-col bg-slate-50/50 border border-slate-100">
+          <h3 className="text-xl font-black text-slate-900 mb-10 tracking-tight">Status Distribution</h3>
+          <div className="h-[280px] w-full relative">
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={95}
+                    paddingAngle={8}
+                    dataKey="value"
+                  >
+                    {statusData.map((entry: any, index: number) => {
+                      const statusKey = Object.keys(STATUS_COLORS).find(key => key.replace('_', ' ') === entry.name);
+                      return <Cell key={`cell-${index}`} fill={statusKey ? STATUS_COLORS[statusKey] : COLORS[index % COLORS.length]} />;
+                    })}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                 <p className="font-bold uppercase tracking-widest text-[10px]">No data available</p>
               </div>
-            ))}
+            )}
+          </div>
+          <div className="mt-8 space-y-3">
+            {statusData.map((item: any, i) => {
+              const statusKey = Object.keys(STATUS_COLORS).find(key => key.replace('_', ' ') === item.name);
+              const color = statusKey ? STATUS_COLORS[statusKey] : COLORS[i % COLORS.length];
+              return (
+                <div key={item.name} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+                    <span className="text-sm font-bold text-slate-600">{item.name}</span>
+                  </div>
+                  <span className="text-base font-black text-slate-900">{item.value}</span>
+                </div>
+              );
+            })}
           </div>
         </Card>
       </div>
 
-      <Card className="p-0 overflow-hidden">
-        <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-zinc-900">High Priority Alerts</h3>
-          <Link to="/admin/complaints" className="text-sm font-bold text-[#F27D26] hover:underline">View All</Link>
+      <Card className="p-0 overflow-hidden border-none shadow-premium">
+        <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">High Priority Alerts</h3>
+          <Link to="/admin/complaints">
+             <Button variant="ghost" size="sm" className="font-black text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full flex items-center">
+                View All
+                <ArrowUpRight className="ml-1 w-4 h-4" />
+             </Button>
+          </Link>
         </div>
-        <div className="divide-y divide-zinc-100">
+        <div className="divide-y divide-slate-50">
           {complaints.filter(c => c.priority === Priority.HIGH || c.priority === Priority.CRITICAL).length > 0 ? (
             complaints.filter(c => c.priority === Priority.HIGH || c.priority === Priority.CRITICAL).map((complaint) => (
-              <div key={complaint.id} className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
-                    <img src={complaint.imageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div key={complaint.id} className="p-8 flex items-center justify-between hover:bg-slate-50/50 transition-all group">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 shadow-soft group-hover:scale-105 transition-transform duration-500">
+                    <img src={getFullImageUrl(complaint.imageUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-zinc-900">{complaint.title}</h4>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500">
-                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {complaint.location}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(complaint.createdAt).toLocaleDateString()}</span>
+                    <h4 className="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors mb-1">{complaint.title}</h4>
+                    <div className="flex items-center gap-4 text-[11px] text-slate-400 font-bold uppercase tracking-widest">
+                      <span className="flex items-center gap-2 px-2 py-1 bg-slate-100 rounded-lg"><MapPin className="w-3 h-3" /> {complaint.location}</span>
+                      <span className="flex items-center gap-2"><Clock className="w-3 h-3" /> {new Date(complaint.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Badge variant={complaint.priority}>{complaint.priority}</Badge>
+                <div className="flex items-center gap-6">
+                  <Badge variant={complaint.priority} className="px-5 py-2 text-[11px]">{complaint.priority}</Badge>
                   <Link to={`/complaints/${complaint.id}`}>
-                    <Button variant="outline" size="sm">Manage</Button>
+                    <Button variant="outline" className="rounded-2xl border-slate-100 py-2">Manage</Button>
                   </Link>
                 </div>
               </div>
             ))
           ) : (
-            <div className="p-12 text-center">
-              <p className="text-zinc-500 text-sm">No high priority alerts found. Everything is under control!</p>
+            <div className="p-20 text-center">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+                  <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <p className="text-slate-400 font-bold tracking-tight text-lg">No high priority alerts found. Everything is under control!</p>
             </div>
           )}
         </div>
@@ -200,11 +243,17 @@ export const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="p-10 space-y-10 max-w-[1600px] mx-auto min-h-screen">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Admin Console</h1>
-          <p className="text-zinc-500 mt-1">Manage system operations, users, and complaints.</p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Admin <span className="text-blue-600">Console</span></h1>
+          <p className="text-slate-500 font-medium text-lg lg:max-w-xl">Manage system operations, users, and civic grievances at scale.</p>
+        </div>
+        <div className="flex gap-4">
+             <Button variant="outline" className="rounded-2xl border-slate-200">Export Report</Button>
+             <Link to="/admin/analytics">
+                <Button className="rounded-2xl shadow-lg shadow-blue-500/10">Detailed Analytics</Button>
+             </Link>
         </div>
       </header>
 

@@ -15,7 +15,7 @@ import {
 import { useComplaints } from '../context/ComplaintContext';
 import { Card, Badge, Button } from '../components/UI';
 import { motion } from 'motion/react';
-import { cn } from '../lib/utils';
+import { cn, getFullImageUrl } from '../lib/utils';
 
 export const ComplaintDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -83,7 +83,7 @@ export const ComplaintDetailsPage: React.FC = () => {
           <Card className="overflow-hidden">
             <div className="aspect-video w-full bg-zinc-100">
               <img
-                src={complaint.imageUrl}
+                src={getFullImageUrl(complaint.imageUrl)}
                 alt={complaint.title}
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"

@@ -48,9 +48,14 @@ export interface User {
 }
 
 export interface Notification {
-  id: string;
+  _id: string;
+  user: string;
+  title: string;
   message: string;
-  date: string;
+  isRead: boolean;
+  complaint?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Message {
@@ -82,5 +87,15 @@ export interface Complaint {
   imageUrl?: string;
   createdAt: string;
   updatedAt: string;
-  timeline: ComplaintTimeline[];
+  timeline: [
+    {
+      status: ComplaintStatus;
+      timestamp: string;
+      note?: string;
+    }
+  ];
+  upvotes: string[];
+  landmark?: string;
+  issueDate?: string;
+  recurringIssue?: boolean;
 }

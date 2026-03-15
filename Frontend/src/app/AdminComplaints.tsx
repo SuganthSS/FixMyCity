@@ -12,7 +12,7 @@ import {
 import { ComplaintStatus, Department, Priority } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
 import { motion } from 'motion/react';
-import { cn } from '../lib/utils';
+import { cn, getFullImageUrl } from '../lib/utils';
 import { useComplaints } from '../context/ComplaintContext';
 
 export const AdminComplaintsPage: React.FC = () => {
@@ -65,7 +65,7 @@ export const AdminComplaintsPage: React.FC = () => {
     const matchesPriority = priorityFilter === 'ALL' || c.priority === priorityFilter;
     
     return matchesSearch && matchesStatus && matchesPriority;
-  });
+  }).sort((a, b) => (b.upvotes?.length || 0) - (a.upvotes?.length || 0));
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -123,6 +123,7 @@ export const AdminComplaintsPage: React.FC = () => {
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Citizen</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Priority</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Upvotes</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Department</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -133,11 +134,16 @@ export const AdminComplaintsPage: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-100">
-                        <img src={complaint.imageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={getFullImageUrl(complaint.imageUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-zinc-900 line-clamp-1">{complaint.title}</p>
-                        <p className="text-[10px] font-mono text-zinc-400">#{complaint.id}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] font-mono text-zinc-400">#{complaint.id}</p>
+                          {complaint.landmark && (
+                            <span className="text-[10px] text-[#2563EB] font-bold truncate">({complaint.landmark})</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -181,6 +187,11 @@ export const AdminComplaintsPage: React.FC = () => {
                         <option key={s} value={s}>{s.replace('_', ' ')}</option>
                       ))}
                     </select>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-sm font-bold text-zinc-900">
+                      {complaint.upvotes?.length || 0}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

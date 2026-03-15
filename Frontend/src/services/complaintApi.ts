@@ -6,20 +6,28 @@ export const complaintApi = {
         return data;
     },
 
+    getPublicComplaints: async () => {
+        const { data } = await api.get('/complaints/public');
+        return data;
+    },
+
     getComplaintById: async (id: string) => {
         const { data } = await api.get(`/complaints/${id}`);
         return data;
     },
 
     createComplaint: async (formData: FormData) => {
-        const { data } = await api.post('/complaints', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        const { data } = await api.post('/complaints', formData);
         return data;
     },
 
     updateStatus: async (id: string, status: string, message?: string) => {
         const { data } = await api.patch(`/complaints/${id}/status`, { status, message });
+        return data;
+    },
+
+    upvoteComplaint: async (id: string) => {
+        const { data } = await api.patch(`/complaints/${id}/upvote`);
         return data;
     },
 

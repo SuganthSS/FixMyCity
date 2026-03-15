@@ -19,7 +19,22 @@ import {
 import { useComplaints } from '../context/ComplaintContext';
 import { ComplaintStatus, ComplaintCategory, Department } from '../types';
 
-const COLORS = ['#F27D26', '#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B'];
+const STATUS_COLORS: Record<string, string> = {
+  [ComplaintStatus.SUBMITTED]: '#F59E0B',
+  [ComplaintStatus.UNDER_REVIEW]: '#3B82F6',
+  [ComplaintStatus.IN_PROGRESS]: '#8B5CF6',
+  [ComplaintStatus.RESOLVED]: '#10B981',
+  [ComplaintStatus.REJECTED]: '#EF4444',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Road Issue': '#10B981',
+  'Streetlight Issue': '#3B82F6',
+  'Drainage Issue': '#8B5CF6',
+  'Water Leak': '#F59E0B',
+};
+
+const COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#A855F7'];
 
 export const AnalyticsPage: React.FC = () => {
   const { complaints } = useComplaints();
@@ -76,18 +91,28 @@ export const AnalyticsPage: React.FC = () => {
             <BarChart3 className="w-5 h-5 text-zinc-400" />
           </div>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F4F4F5" />
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} width={100} />
-                <Tooltip 
-                  cursor={{ fill: '#F8FAFC' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" fill="#F27D26" radius={[0, 6, 6, 0]} barSize={30} />
-              </BarChart>
-            </ResponsiveContainer>
+            {categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F4F4F5" />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} width={100} />
+                  <Tooltip 
+                    cursor={{ fill: '#F8FAFC' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={30}>
+                    {categoryData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name] || '#94A3B8'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-zinc-500">
+                No data available
+              </div>
+            )}
           </div>
         </Card>
 
@@ -97,24 +122,31 @@ export const AnalyticsPage: React.FC = () => {
             <PieIcon className="w-5 h-5 text-zinc-400" />
           </div>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {statusData.map((entry: any, index: number) => {
+                      const statusKey = Object.keys(STATUS_COLORS).find(key => key.replace('_', ' ') === entry.name);
+                      return <Cell key={`cell-${index}`} fill={statusKey ? STATUS_COLORS[statusKey] : COLORS[index % COLORS.length]} />;
+                    })}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-zinc-500">
+                No data available
+              </div>
+            )}
           </div>
         </Card>
 
@@ -124,18 +156,28 @@ export const AnalyticsPage: React.FC = () => {
             <TrendingUp className="w-5 h-5 text-zinc-400" />
           </div>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={departmentData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F4F4F5" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} />
-                <Tooltip 
-                  cursor={{ fill: '#F8FAFC' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" fill="#3B82F6" radius={[6, 6, 0, 0]} barSize={50} />
-              </BarChart>
-            </ResponsiveContainer>
+            {departmentData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={departmentData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F4F4F5" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717A' }} />
+                  <Tooltip 
+                    cursor={{ fill: '#F8FAFC' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={50}>
+                    {departmentData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-zinc-500">
+                No data available
+              </div>
+            )}
           </div>
         </Card>
       </div>

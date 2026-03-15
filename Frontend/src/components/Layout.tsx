@@ -19,37 +19,44 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
-import { cn } from '../lib/utils';
+import { useTranslation } from 'react-i18next';
+import { cn, getFullImageUrl } from '../lib/utils';
 import { Button, Card } from './UI';
-import { MOCK_NOTIFICATIONS, MOCK_MESSAGES } from '../mockData';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { motion, AnimatePresence } from 'motion/react';
+import { getNotifications, markAsRead, markAllAsRead } from '../services/notificationApi';
+import { Notification } from '../types';
+
+import logo from '../assets/logo.png';
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const isAdmin = user?.role === UserRole.ADMIN;
 
+  const { t } = useTranslation();
   const citizenLinks = [
-    { to: '/dashboard', icon: Home, label: 'Home' },
-    { to: '/report', icon: PlusCircle, label: 'Report Issue' },
-    { to: '/my-complaints', icon: ClipboardList, label: 'My Complaints' },
-    { to: '/profile', icon: User, label: 'Profile' },
+    { to: '/dashboard', icon: Home, label: t('common.home') },
+    { to: '/report', icon: PlusCircle, label: t('common.reportIssue') },
+    { to: '/public-feed', icon: Users, label: t('common.publicFeed') },
+    { to: '/my-complaints', icon: ClipboardList, label: t('common.myComplaints') },
+    { to: '/profile', icon: User, label: t('common.profile') },
   ];
 
   const adminLinks = [
-    { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Admin Dashboard' },
-    { to: '/admin/complaints', icon: AlertCircle, label: 'Complaints Management' },
-    { to: '/admin/citizens', icon: Users, label: 'Citizens' },
-    { to: '/admin/staff', icon: Shield, label: 'Staff Management' },
-    { to: '/admin/map', icon: Map, label: 'Map View' },
-    { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
-    { to: '/profile', icon: User, label: 'Profile' },
+    { to: '/admin/dashboard', icon: LayoutDashboard, label: t('common.adminDashboard') },
+    { to: '/admin/complaints', icon: AlertCircle, label: t('common.complaintsManagement') },
+    { to: '/admin/citizens', icon: Users, label: t('common.citizens') },
+    { to: '/admin/staff', icon: Shield, label: t('common.staffManagement') },
+    { to: '/admin/map', icon: Map, label: t('common.mapView') },
+    { to: '/admin/analytics', icon: BarChart3, label: t('common.analytics') },
+    { to: '/profile', icon: User, label: t('common.profile') },
   ];
 
   const staffLinks = [
-    { to: '/staff/dashboard', icon: LayoutDashboard, label: 'Staff Dashboard' },
-    { to: '/staff/map', icon: Map, label: 'Map View' },
-    { to: '/profile', icon: User, label: 'Profile' },
-    { to: '/messages', icon: MessageSquare, label: 'Messages' },
+    { to: '/staff/dashboard', icon: LayoutDashboard, label: t('common.staffDashboard') },
+    { to: '/staff/map', icon: Map, label: t('common.mapView') },
+    { to: '/profile', icon: User, label: t('common.profile') },
+    { to: '/messages', icon: MessageSquare, label: t('common.messages') },
   ];
 
   const links = user?.role === UserRole.ADMIN ? adminLinks : 
@@ -57,50 +64,51 @@ export const Sidebar: React.FC = () => {
                 citizenLinks;
 
   return (
-    <aside className="w-64 bg-white border-r border-zinc-100 flex flex-col h-screen sticky top-0">
-      <div className="p-6 flex items-center gap-2">
-        <div className="w-8 h-8 bg-[#F27D26] rounded-lg flex items-center justify-center">
-          <AlertCircle className="text-white w-5 h-5" />
-        </div>
-        <span className="text-xl font-bold text-zinc-900 tracking-tight">FixMyCity</span>
+    <aside className="w-72 bg-white flex flex-col h-screen sticky top-0 z-20 shadow-premium border-r border-slate-100">
+      <div className="p-8 flex items-center gap-3">
+        <img src={logo} alt="FixMyCity" className="w-10 h-10 object-contain" />
+        <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">FixMyCity</span>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
             className={({ isActive }) => cn(
-              'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
+              'flex items-center gap-3 px-6 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300',
               isActive 
-                ? 'bg-[#F27D26] text-white shadow-md shadow-orange-100' 
-                : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
+                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
+                : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
             )}
           >
-            <link.icon className="w-5 h-5" />
-            {link.label}
+            {({ isActive }) => (
+              <>
+                <link.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-blue-600" : "text-slate-400")} />
+                {link.label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
-
-      <div className="p-4 mt-auto">
-        <div className="bg-orange-50 rounded-2xl p-4 mb-4 relative overflow-hidden group">
-          <div className="absolute -right-4 -top-4 w-16 h-16 bg-[#F27D26] opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500" />
-          <p className="text-xs font-semibold text-[#F27D26] mb-1">Need Help?</p>
-          <p className="text-[10px] text-orange-700/70 mb-3">Check our guide for reporting issues effectively.</p>
+      <div className="p-6 mt-auto">
+        <div className="bg-slate-50 rounded-[2.5rem] p-6 mb-6 relative overflow-hidden group border border-slate-100 shadow-sm">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-500 opacity-5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+          <p className="text-sm font-bold text-slate-900 mb-1">Need Help?</p>
+          <p className="text-[11px] text-slate-500 mb-4 leading-relaxed font-medium">Explore our guides and tutorials for citizens.</p>
           <Link to="/help">
-            <Button size="sm" variant="outline" className="w-full bg-white border-orange-100 text-[#F27D26] hover:bg-orange-50">
-              View Guide
+            <Button size="sm" variant="outline" className="w-full bg-white border-slate-200 text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all font-bold">
+              {t('common.viewGuide')}
             </Button>
           </Link>
         </div>
         
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-zinc-500 hover:bg-red-50 hover:text-red-600 transition-all"
+          className="flex items-center gap-3 px-6 py-4 w-full rounded-2xl text-[13px] font-bold text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all duration-300"
         >
-          <LogOut className="w-5 h-5" />
-          Logout
+          <LogOut className="w-4 h-4" />
+          {t('common.logout')}
         </button>
       </div>
     </aside>
@@ -109,8 +117,47 @@ export const Sidebar: React.FC = () => {
 
 export const Navbar: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const loadNotifications = async () => {
+    try {
+      const data = await getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadNotifications();
+      const interval = setInterval(loadNotifications, 60000); // refresh every minute
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await markAsRead(id);
+      setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
+    } catch (error) {
+      console.error('Failed to mark as read', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead();
+      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.error('Failed to mark all as read', error);
+    }
+  };
   
   const notificationRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLDivElement>(null);
@@ -129,27 +176,28 @@ export const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-zinc-100 px-8 flex items-center justify-between sticky top-0 z-10">
-      <div className="flex-1 max-w-md relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+    <header className="h-24 bg-white/60 backdrop-blur-[12px] border-b border-slate-100 px-10 flex items-center justify-between sticky top-0 z-10">
+      <div className="flex-1 max-w-sm relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
         <input 
           type="text" 
-          placeholder="Search reports, IDs, or status..." 
-          className="w-full bg-zinc-50 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[#F27D26]/20 transition-all"
+          placeholder={t('common.search')}
+          className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 shadow-soft"
         />
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {user?.role === UserRole.CITIZEN && <LanguageSwitcher />}
         <div className="relative" ref={notificationRef}>
           <button 
             onClick={() => { setShowNotifications(!showNotifications); setShowMessages(false); }}
             className={cn(
-              "p-2.5 text-zinc-500 hover:bg-zinc-50 rounded-xl relative transition-all",
-              showNotifications && "bg-zinc-100 text-[#F27D26]"
+              "p-3 text-slate-500 hover:bg-slate-50 rounded-xl relative transition-all",
+              showNotifications && "bg-blue-50 text-blue-600"
             )}
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+            {unreadCount > 0 && <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-white shadow-sm" />}
           </button>
           
           <AnimatePresence>
@@ -158,25 +206,38 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-zinc-100 overflow-hidden z-50"
+                className="absolute right-0 mt-3 w-80 bg-white rounded-[2rem] shadow-premium border border-slate-100 overflow-hidden z-50"
               >
-                <div className="p-4 border-b border-zinc-50 flex items-center justify-between">
-                  <h3 className="font-bold text-zinc-900">Notifications</h3>
-                  <button className="text-[10px] font-bold text-[#F27D26] uppercase tracking-wider hover:underline">Mark all as read</button>
+                <div className="p-5 border-b border-slate-50 flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900">{t('common.notifications')}</h3>
+                  {unreadCount > 0 && (
+                    <button onClick={handleMarkAllAsRead} className="text-[10px] font-bold text-blue-600 uppercase tracking-wider hover:underline">{t('common.markAllRead')}</button>
+                  )}
                 </div>
-                <div className="max-h-80 overflow-y-auto divide-y divide-zinc-50">
-                  {MOCK_NOTIFICATIONS.map((notif) => (
-                    <div key={notif.id} className="p-4 hover:bg-zinc-50 transition-colors cursor-pointer group">
-                      <p className="text-sm text-zinc-700 group-hover:text-zinc-900 leading-snug">{notif.message}</p>
-                      <div className="flex items-center gap-1 mt-2 text-[10px] text-zinc-400 font-medium">
-                        <Clock className="w-3 h-3" />
-                        {notif.date}
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                  {notifications.length > 0 ? (
+                    notifications.map(notification => (
+                      <div 
+                        key={notification._id} 
+                        className={cn("p-5 cursor-pointer hover:bg-slate-50 transition-colors", !notification.isRead && "bg-blue-50/20")}
+                        onClick={() => { if (!notification.isRead) handleMarkAsRead(notification._id); }}
+                      >
+                        <p className="font-bold text-sm text-slate-900 mb-1">{notification.title}</p>
+                        <p className="text-xs text-slate-500 leading-relaxed">{notification.message}</p>
+                        <p className="text-[10px] text-slate-400 mt-2 font-medium">{new Date(notification.createdAt).toLocaleString()}</p>
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-10 text-center">
+                       <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                          <Bell className="w-6 h-6 text-slate-300" />
+                       </div>
+                       <p className="text-sm font-medium text-slate-400">{t('common.noNotifications')}</p>
                     </div>
-                  ))}
+                  )}
                 </div>
-                <div className="p-3 bg-zinc-50 text-center">
-                  <button className="text-xs font-bold text-zinc-500 hover:text-zinc-900">View all notifications</button>
+                <div className="p-4 bg-slate-50/50 text-center border-t border-slate-50">
+                  <button className="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors">{t('common.viewAll')}</button>
                 </div>
               </motion.div>
             )}
@@ -187,8 +248,8 @@ export const Navbar: React.FC = () => {
           <button 
             onClick={() => { setShowMessages(!showMessages); setShowNotifications(false); }}
             className={cn(
-              "p-2.5 text-zinc-500 hover:bg-zinc-50 rounded-xl transition-all",
-              showMessages && "bg-zinc-100 text-[#F27D26]"
+              "p-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all",
+              showMessages && "bg-blue-50 text-blue-600"
             )}
           >
             <MessageSquare className="w-5 h-5" />
@@ -200,35 +261,25 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-zinc-100 overflow-hidden z-50"
+                className="absolute right-0 mt-3 w-80 bg-white rounded-[2rem] shadow-premium border border-slate-100 overflow-hidden z-50"
               >
-                <div className="p-4 border-b border-zinc-50 flex items-center justify-between">
-                  <h3 className="font-bold text-zinc-900">Messages</h3>
+                <div className="p-5 border-b border-slate-50 flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900">{t('common.messages')}</h3>
                   <Link to="/messages" onClick={() => setShowMessages(false)}>
-                    <button className="text-[10px] font-bold text-[#F27D26] uppercase tracking-wider hover:underline">New message</button>
+                    <button className="text-[10px] font-bold text-blue-600 uppercase tracking-wider hover:underline">{t('common.messages')}</button>
                   </Link>
                 </div>
-                <div className="max-h-80 overflow-y-auto divide-y divide-zinc-50">
-                  {MOCK_MESSAGES.map((msg) => (
-                    <Link key={msg.id} to="/messages" onClick={() => setShowMessages(false)}>
-                      <div className="p-4 hover:bg-zinc-50 transition-colors cursor-pointer flex gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center shrink-0 font-bold text-zinc-400 text-xs">
-                          {msg.sender[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <p className="text-sm font-bold text-zinc-900 truncate">{msg.sender}</p>
-                            <span className="text-[10px] text-zinc-400 font-medium">{msg.time}</span>
-                          </div>
-                          <p className="text-xs text-zinc-500 truncate">{msg.message}</p>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                   <div className="p-10 text-center">
+                       <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                          <MessageSquare className="w-6 h-6 text-slate-300" />
+                       </div>
+                       <p className="text-sm font-medium text-slate-400">{t('common.noMessages')}</p>
+                    </div>
                 </div>
-                <div className="p-3 bg-zinc-50 text-center">
+                <div className="p-4 bg-slate-50/50 text-center border-t border-slate-50">
                   <Link to="/messages" onClick={() => setShowMessages(false)}>
-                    <button className="text-xs font-bold text-zinc-500 hover:text-zinc-900">Open message center</button>
+                    <button className="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors">{t('common.openMessageCenter')}</button>
                   </Link>
                 </div>
               </motion.div>
@@ -236,17 +287,17 @@ export const Navbar: React.FC = () => {
           </AnimatePresence>
         </div>
         
-        <div className="h-8 w-[1px] bg-zinc-100 mx-2" />
+        <div className="h-8 w-[1px] bg-slate-100 mx-2" />
         
-        <Link to="/profile" className="flex items-center gap-3 pl-2 hover:bg-zinc-50 p-1.5 rounded-2xl transition-all">
+        <Link to="/profile" className="flex items-center gap-3 pl-3 hover:bg-slate-50 p-1.5 rounded-2xl transition-all border border-transparent hover:border-slate-100">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-zinc-900">{user?.name}</p>
-            <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">{user?.role}</p>
+            <p className="text-sm font-bold text-slate-900">{user?.name}</p>
+            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{user?.role}</p>
           </div>
           <img 
-            src={user?.avatar} 
+            src={getFullImageUrl(user?.avatar)} 
             alt="Avatar" 
-            className="w-10 h-10 rounded-xl border-2 border-white shadow-sm"
+            className="w-11 h-11 rounded-xl border-2 border-white shadow-premium"
             referrerPolicy="no-referrer"
           />
         </Link>

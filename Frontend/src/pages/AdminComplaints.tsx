@@ -8,22 +8,48 @@ import {
   Building2,
   AlertCircle
 } from 'lucide-react';
-import { MOCK_COMPLAINTS } from '../mockData';
-import { ComplaintStatus, Department, Priority } from '../types';
+import { Complaint, ComplaintStatus, Department, Priority } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
 import { motion } from 'motion/react';
-import { cn } from '../lib/utils';
+import { cn, getFullImageUrl } from '../lib/utils';
+import { complaintApi } from '../services/complaintApi';
 
 export const AdminComplaintsPage: React.FC = () => {
-  const [complaints, setComplaints] = useState(MOCK_COMPLAINTS);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleStatusChange = (id: string, newStatus: ComplaintStatus) => {
-    setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: newStatus, updatedAt: new Date().toISOString() } : c));
+  React.useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const fetchComplaints = async () => {
+    try {
+      const data = await complaintApi.getComplaints();
+      setComplaints(data);
+    } catch (error) {
+      console.error('Error fetching complaints:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDepartmentChange = (id: string, newDept: Department) => {
-    setComplaints(prev => prev.map(c => c.id === id ? { ...c, department: newDept, updatedAt: new Date().toISOString() } : c));
+  const handleStatusChange = async (id: string, newStatus: ComplaintStatus) => {
+    try {
+      await complaintApi.updateStatus(id, newStatus);
+      setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: newStatus, updatedAt: new Date().toISOString() } : c));
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const handleDepartmentChange = async (id: string, newDept: Department) => {
+    try {
+      await complaintApi.updateDepartment(id, newDept);
+      setComplaints(prev => prev.map(c => c.id === id ? { ...c, department: newDept, updatedAt: new Date().toISOString() } : c));
+    } catch (error) {
+      console.error('Error updating department:', error);
+    }
   };
 
   const filtered = complaints.filter(c => 
@@ -74,12 +100,19 @@ export const AdminComplaintsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {filtered.map((complaint) => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
+                    {loading ? 'Loading...' : 'No data available'}
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((complaint) => (
                 <tr key={complaint.id} className="hover:bg-zinc-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-100">
-                        <img src={complaint.imageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={getFullImageUrl(complaint.imageUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-zinc-900 line-clamp-1">{complaint.title}</p>
@@ -140,7 +173,8 @@ export const AdminComplaintsPage: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>

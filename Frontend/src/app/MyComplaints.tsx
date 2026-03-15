@@ -13,10 +13,13 @@ import { ComplaintStatus, ComplaintCategory } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { useComplaints } from '../context/ComplaintContext';
+import { getFullImageUrl } from '../lib/utils';
 
 export const MyComplaintsPage: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { complaints, loading } = useComplaints();
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -36,11 +39,11 @@ export const MyComplaintsPage: React.FC = () => {
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">My Complaints</h1>
-          <p className="text-zinc-500 mt-1">Track the status of your reported civic issues.</p>
+          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">{t('myComplaints.title')}</h1>
+          <p className="text-zinc-500 mt-1">{t('myComplaints.subtitle')}</p>
         </div>
         <Link to="/report">
-          <Button>Report New Issue</Button>
+          <Button>{t('dashboard.reportNew')}</Button>
         </Link>
       </header>
 
@@ -48,7 +51,7 @@ export const MyComplaintsPage: React.FC = () => {
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <Input
-            placeholder="Search by title or ID..."
+            placeholder={t('myComplaints.searchPlaceholder')}
             className="pl-10 h-11"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -57,23 +60,23 @@ export const MyComplaintsPage: React.FC = () => {
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-1 md:w-40">
             <select
-              className="w-full h-11 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#F27D26]/20"
+              className="w-full h-11 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="ALL">All Statuses</option>
+              <option value="ALL">{t('myComplaints.allStatuses')}</option>
               {Object.values(ComplaintStatus).map(s => (
-                <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                <option key={s} value={s}>{t(`common.${s.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`)}</option>
               ))}
             </select>
           </div>
           <div className="relative flex-1 md:w-48">
             <select
-              className="w-full h-11 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#F27D26]/20"
+              className="w-full h-11 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
-              <option value="ALL">All Categories</option>
+              <option value="ALL">{t('myComplaints.allCategories')}</option>
               {Object.values(ComplaintCategory).map(c => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -98,11 +101,11 @@ export const MyComplaintsPage: React.FC = () => {
                 transition={{ delay: i * 0.05 }}
               >
                 <Link to={`/complaints/${complaint.id}`}>
-                  <Card className="p-4 hover:border-[#F27D26]/30 hover:shadow-md transition-all group">
+                  <Card className="p-4 hover:border-[#2563EB]/30 hover:shadow-md transition-all group">
                     <div className="flex flex-col md:flex-row gap-6 items-center">
                       <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden shrink-0">
                         <img
-                          src={complaint.imageUrl}
+                          src={getFullImageUrl(complaint.imageUrl)}
                           alt={complaint.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           referrerPolicy="no-referrer"
@@ -113,10 +116,10 @@ export const MyComplaintsPage: React.FC = () => {
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <Badge variant={complaint.status}>{complaint.status.replace('_', ' ')}</Badge>
-                              <Badge variant={complaint.priority}>{complaint.priority}</Badge>
+                              <Badge variant={complaint.status}>{t(`common.${complaint.status.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`)}</Badge>
+                              <Badge variant={complaint.priority}>{t(`common.${complaint.priority.toLowerCase()}`)}</Badge>
                             </div>
-                            <h3 className="text-lg font-bold text-zinc-900 group-hover:text-[#F27D26] transition-colors">
+                            <h3 className="text-lg font-bold text-zinc-900 group-hover:text-[#2563EB] transition-colors">
                               {complaint.title}
                             </h3>
                           </div>
@@ -128,13 +131,16 @@ export const MyComplaintsPage: React.FC = () => {
                             <div className="p-1.5 bg-zinc-100 rounded-lg">
                               <Filter className="w-3 h-3" />
                             </div>
-                            {complaint.category}
+                            {t(`common.${complaint.category.split(' ').map((word, i) => i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('')}`)}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-zinc-100 rounded-lg">
                               <MapPin className="w-3 h-3" />
                             </div>
                             <span className="truncate">{complaint.location}</span>
+                            {complaint.landmark && (
+                              <span className="text-[10px] text-zinc-400 block truncate">({complaint.landmark})</span>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-zinc-100 rounded-lg">
@@ -146,7 +152,7 @@ export const MyComplaintsPage: React.FC = () => {
                             <div className="p-1.5 bg-zinc-100 rounded-lg">
                               <Clock className="w-3 h-3" />
                             </div>
-                            Last updated: {new Date(complaint.updatedAt).toLocaleDateString()}
+                            {t('common.lastUpdated')}: {new Date(complaint.updatedAt).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
@@ -155,7 +161,7 @@ export const MyComplaintsPage: React.FC = () => {
                         <Button variant="ghost" size="icon" className="rounded-full">
                           <MoreVertical className="w-4 h-4" />
                         </Button>
-                        <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[#F27D26] group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[#2563EB] group-hover:translate-x-1 transition-all" />
                       </div>
                     </div>
                   </Card>
@@ -167,10 +173,10 @@ export const MyComplaintsPage: React.FC = () => {
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
                 <Search className="w-8 h-8 text-zinc-300" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-900">No complaints found</h3>
-              <p className="text-zinc-500 mt-1">Try adjusting your filters or report a new issue.</p>
+              <h3 className="text-lg font-bold text-zinc-900">{t('myComplaints.notFound')}</h3>
+              <p className="text-zinc-500 mt-1">{t('myComplaints.notFoundDesc')}</p>
               <Button variant="outline" className="mt-6" onClick={() => { setStatusFilter('ALL'); setCategoryFilter('ALL'); setSearchQuery(''); }}>
-                Clear All Filters
+                {t('myComplaints.clearFilters')}
               </Button>
             </div>
           )}

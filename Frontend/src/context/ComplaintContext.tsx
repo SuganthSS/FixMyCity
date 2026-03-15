@@ -33,11 +33,15 @@ const mapComplaint = (c: any): Complaint => ({
   imageUrl: c.imageUrl,
   createdAt: c.createdAt || new Date().toISOString(),
   updatedAt: c.updatedAt || new Date().toISOString(),
+  upvotes: c.upvotes || [],
   timeline: (c.timeline || []).map((t: any) => ({
     status: t.status as ComplaintStatus,
     timestamp: t.updatedAt || t.timestamp || new Date().toISOString(),
     note: t.message || t.note,
   })),
+  landmark: c.landmark,
+  issueDate: c.issueDate,
+  recurringIssue: c.recurringIssue,
 });
 
 export const ComplaintProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -74,26 +78,37 @@ export const ComplaintProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addComplaint = async (newComplaintData: Omit<Complaint, 'id' | 'createdAt' | 'updatedAt' | 'timeline' | 'status'>) => {
     try {
+      console.log('addComplaint called with:', newComplaintData);
+
       const formData = new FormData();
       formData.append('title', newComplaintData.title);
       formData.append('description', newComplaintData.description);
-      formData.append('location', newComplaintData.location || '');
-
       formData.append('category', newComplaintData.category);
-      formData.append('priority', newComplaintData.priority);
-      if (newComplaintData.latitude !== undefined) {
-        formData.append('latitude', newComplaintData.latitude.toString());
-      }
-      if (newComplaintData.longitude !== undefined) {
-        formData.append('longitude', newComplaintData.longitude.toString());
-      }
+      formData.append('location', newComplaintData.location || '');
+      formData.append('latitude', newComplaintData.latitude?.toString() || '');
+      formData.append('longitude', newComplaintData.longitude?.toString() || '');
+      formData.append('landmark', newComplaintData.landmark || '');
+      formData.append('issueDate', newComplaintData.issueDate || '');
+      formData.append('recurringIssue', String(newComplaintData.recurringIssue));
 
-      // If imageUrl is a data URL (from file upload), convert to blob
+      // Append image last as requested
       if (newComplaintData.imageUrl && newComplaintData.imageUrl.startsWith('data:')) {
+        console.log('Converting data URL to blob...');
         const response = await fetch(newComplaintData.imageUrl);
         const blob = await response.blob();
         formData.append('image', blob, 'complaint-image.jpg');
+      } else if (newComplaintData.imageUrl) {
+        formData.append('imageUrl', newComplaintData.imageUrl);
       }
+
+      console.log('Final FormData contents:');
+      formData.forEach((value, key) => {
+        if (value instanceof Blob) {
+           console.log(`${key}: [Blob ${value.type} ${value.size} bytes]`);
+        } else {
+           console.log(`${key}:`, value);
+        }
+      });
 
       await complaintApi.createComplaint(formData);
       await refreshComplaints();

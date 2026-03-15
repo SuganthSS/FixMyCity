@@ -11,6 +11,7 @@ import {
 import { ComplaintCategory, Priority } from '../types';
 import { Button, Input, Label, Card } from '../components/UI';
 import { motion } from 'motion/react';
+import { getFullImageUrl } from '../lib/utils';
 
 export const ReportIssuePage: React.FC = () => {
   const navigate = useNavigate();
@@ -114,7 +115,7 @@ export const ReportIssuePage: React.FC = () => {
             <Label className="mb-4">Upload Evidence (Photo)</Label>
             {image ? (
               <div className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video">
-                <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                <img src={getFullImageUrl(image)} alt="Preview" className="w-full h-full object-cover" />
                 <button 
                   type="button"
                   onClick={() => setImage(null)}

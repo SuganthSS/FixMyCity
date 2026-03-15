@@ -8,6 +8,8 @@ import {
   updateComplaintStatus,
   updateComplaintPriority,
   updateComplaintDepartment,
+  getPublicComplaints,
+  toggleUpvote,
 } from '../controllers/complaintController.ts';
 import { protect } from '../middleware/authMiddleware.ts';
 import { admin, allowRoles } from '../middleware/roleMiddleware.ts';
@@ -31,7 +33,11 @@ router
   .post(protect, allowRoles('citizen'), upload.single('image'), createComplaint)
   .get(protect, getComplaints);
 
+// Public route must be before /:id to avoid matching :id with 'public'
+router.route('/public').get(protect, getPublicComplaints);
+
 router.route('/:id').get(protect, getComplaintById);
+router.patch('/:id/upvote', protect, allowRoles('citizen'), toggleUpvote);
 
 // Staff and Admin routes
 router.patch('/:id/status', protect, allowRoles('staff', 'admin'), updateComplaintStatus);

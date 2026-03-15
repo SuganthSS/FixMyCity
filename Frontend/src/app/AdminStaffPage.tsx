@@ -7,6 +7,7 @@ import {
 import { UserRole } from '../types';
 import { Card, Badge, Button } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
+import { getFullImageUrl } from '../lib/utils';
 
 export const AdminStaffPage: React.FC = () => {
   const { users, updateOtherUser } = useAuth();
@@ -41,7 +42,7 @@ export const AdminStaffPage: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-100 shrink-0">
-                        <img src={u.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={getFullImageUrl(u.avatar)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div>
                         <p className="font-bold text-zinc-900 text-sm">{u.name}</p>

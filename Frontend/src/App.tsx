@@ -10,6 +10,7 @@ import { UserRole } from './types';
 import { Sidebar, Navbar } from './components/Layout';
 import { LoginPage, RegisterPage } from './pages/Auth';
 import { CitizenDashboard } from './app/CitizenDashboard';
+import { PublicFeed } from './app/PublicFeed';
 import { ReportIssuePage } from './app/ReportIssue';
 import { MyComplaintsPage } from './app/MyComplaints';
 import { ComplaintDetailsPage } from './app/ComplaintDetails';
@@ -31,6 +32,18 @@ import { AnalyticsPage } from './app/AnalyticsPage';
 import { LandingPage } from './app/LandingPage';
 import { ComplaintProvider } from './context/ComplaintContext';
 
+const getDashboardRoute = (role?: UserRole) => {
+  switch (role) {
+    case UserRole.ADMIN:
+      return '/admin/dashboard';
+    case UserRole.STAFF:
+      return '/staff/dashboard';
+    case UserRole.CITIZEN:
+    default:
+      return '/dashboard';
+  }
+};
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode; role?: UserRole }> = ({ children, role }) => {
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -40,7 +53,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; role?: UserRole }> =
   }
 
   if (role && user?.role !== role) {
-    return <Navigate to={user?.role === UserRole.ADMIN ? '/admin/dashboard' : '/dashboard'} replace />;
+    return <Navigate to={getDashboardRoute(user?.role)} replace />;
   }
 
   return <>{children}</>;
@@ -50,7 +63,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    return <Navigate to={user?.role === UserRole.ADMIN ? '/admin/dashboard' : '/dashboard'} replace />;
+    return <Navigate to={getDashboardRoute(user?.role)} replace />;
   }
 
   return <>{children}</>;
@@ -81,6 +94,11 @@ export default function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute role={UserRole.CITIZEN}>
             <Layout><CitizenDashboard /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/public-feed" element={
+          <ProtectedRoute role={UserRole.CITIZEN}>
+            <Layout><PublicFeed /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/report" element={
