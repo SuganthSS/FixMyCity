@@ -93,8 +93,8 @@ export const Sidebar: React.FC = () => {
       <div className="p-6 mt-auto">
         <div className="bg-slate-50 rounded-[2.5rem] p-6 mb-6 relative overflow-hidden group border border-slate-100 shadow-sm">
           <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-500 opacity-5 rounded-full group-hover:scale-150 transition-transform duration-700" />
-          <p className="text-sm font-bold text-slate-900 mb-1">Need Help?</p>
-          <p className="text-[11px] text-slate-500 mb-4 leading-relaxed font-medium">Explore our guides and tutorials for citizens.</p>
+          <p className="text-sm font-bold text-slate-900 mb-1">{t('common.needHelp')}</p>
+          <p className="text-[11px] text-slate-500 mb-4 leading-relaxed font-medium">{t('common.helpDescription')}</p>
           <Link to="/help">
             <Button size="sm" variant="outline" className="w-full bg-white border-slate-200 text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all font-bold">
               {t('common.viewGuide')}

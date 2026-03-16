@@ -1,13 +1,16 @@
 import React from 'react';
 import { Card } from '../components/UI';
 import { HelpCircle, FileText, Activity, ShieldCheck, UserCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const HelpPage: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8">
       <header>
-        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">User Guide</h1>
-        <p className="text-zinc-500 mt-1">Learn how to use FixMyCity to improve your neighborhood.</p>
+        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">{t('help.title')}</h1>
+        <p className="text-zinc-500 mt-1">{t('help.subtitle')}</p>
       </header>
 
       <div className="space-y-6">
@@ -16,12 +19,10 @@ export const HelpPage: React.FC = () => {
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
               <FileText className="w-5 h-5 text-[#2563EB]" />
             </div>
-            <h2 className="text-xl font-bold text-zinc-900">How to report a complaint</h2>
+            <h2 className="text-xl font-bold text-zinc-900">{t('help.reportTitle')}</h2>
           </div>
           <p className="text-zinc-600 text-sm leading-relaxed">
-            To report a new issue, navigate to the "Report Issue" page from the sidebar. 
-            Fill in the title, select a relevant category, provide the location, and write a detailed description. 
-            Uploading a clear photo of the issue helps our team assess and prioritize the repair more effectively.
+            {t('help.reportDesc')}
           </p>
         </Card>
 
@@ -30,36 +31,36 @@ export const HelpPage: React.FC = () => {
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
               <Activity className="w-5 h-5 text-blue-600" />
             </div>
-            <h2 className="text-xl font-bold text-zinc-900">Complaint lifecycle explanation</h2>
+            <h2 className="text-xl font-bold text-zinc-900">{t('help.lifecycleTitle')}</h2>
           </div>
           <div className="space-y-4">
             <p className="text-zinc-600 text-sm leading-relaxed">
-              Every reported issue goes through a structured process:
+              {t('help.lifecycleSubtitle')}
             </p>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <li className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                <span className="font-bold text-zinc-900 text-xs block mb-1">SUBMITTED</span>
-                <span className="text-[11px] text-zinc-500">Your report has been received and is waiting for initial review.</span>
+                <span className="font-bold text-zinc-900 text-xs block mb-1">{t('help.statuses.submitted.label')}</span>
+                <span className="text-[11px] text-zinc-500">{t('help.statuses.submitted.desc')}</span>
               </li>
               <li className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                <span className="font-bold text-zinc-900 text-xs block mb-1">UNDER REVIEW</span>
-                <span className="text-[11px] text-zinc-500">An administrator is verifying the details and assessing priority.</span>
+                <span className="font-bold text-zinc-900 text-xs block mb-1">{t('help.statuses.underReview.label')}</span>
+                <span className="text-[11px] text-zinc-500">{t('help.statuses.underReview.desc')}</span>
               </li>
               <li className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                <span className="font-bold text-zinc-900 text-xs block mb-1">ASSIGNED</span>
-                <span className="text-[11px] text-zinc-500">The issue has been routed to the appropriate city department.</span>
+                <span className="font-bold text-zinc-900 text-xs block mb-1">{t('help.statuses.assigned.label')}</span>
+                <span className="text-[11px] text-zinc-500">{t('help.statuses.assigned.desc')}</span>
               </li>
               <li className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                <span className="font-bold text-zinc-900 text-xs block mb-1">IN PROGRESS</span>
-                <span className="text-[11px] text-zinc-500">A repair crew has been dispatched and work is underway.</span>
+                <span className="font-bold text-zinc-900 text-xs block mb-1">{t('help.statuses.inProgress.label')}</span>
+                <span className="text-[11px] text-zinc-500">{t('help.statuses.inProgress.desc')}</span>
               </li>
               <li className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                <span className="font-bold text-zinc-900 text-xs block mb-1">RESOLVED</span>
-                <span className="text-[11px] text-zinc-500">The work is complete and the issue has been fixed.</span>
+                <span className="font-bold text-zinc-900 text-xs block mb-1">{t('help.statuses.resolved.label')}</span>
+                <span className="text-[11px] text-zinc-500">{t('help.statuses.resolved.desc')}</span>
               </li>
               <li className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                <span className="font-bold text-zinc-900 text-xs block mb-1">REJECTED</span>
-                <span className="text-[11px] text-zinc-500">The report was invalid or falls outside city jurisdiction.</span>
+                <span className="font-bold text-zinc-900 text-xs block mb-1">{t('help.statuses.rejected.label')}</span>
+                <span className="text-[11px] text-zinc-500">{t('help.statuses.rejected.desc')}</span>
               </li>
             </ul>
           </div>
@@ -70,12 +71,10 @@ export const HelpPage: React.FC = () => {
             <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-green-600" />
             </div>
-            <h2 className="text-xl font-bold text-zinc-900">How to track complaint status</h2>
+            <h2 className="text-xl font-bold text-zinc-900">{t('help.trackTitle')}</h2>
           </div>
           <p className="text-zinc-600 text-sm leading-relaxed">
-            You can monitor all your reports in the "My Complaints" section. 
-            Each report shows a status badge and a priority level. 
-            Clicking on a specific complaint will show you a detailed timeline of all actions taken by city officials.
+            {t('help.trackDesc')}
           </p>
         </Card>
 
@@ -84,12 +83,10 @@ export const HelpPage: React.FC = () => {
             <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
               <UserCheck className="w-5 h-5 text-purple-600" />
             </div>
-            <h2 className="text-xl font-bold text-zinc-900">Admin complaint workflow</h2>
+            <h2 className="text-xl font-bold text-zinc-900">{t('help.adminTitle')}</h2>
           </div>
           <p className="text-zinc-600 text-sm leading-relaxed">
-            Administrators use the Admin Dashboard to oversee city-wide issues. 
-            They can filter reports by priority, assign them to specific departments (Road, Water, Electricity, etc.), 
-            and update the status as work progresses. This ensures that every citizen report is handled by the right team.
+            {t('help.adminDesc')}
           </p>
         </Card>
       </div>

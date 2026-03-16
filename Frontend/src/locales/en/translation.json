@@ -17,6 +17,7 @@
     "viewAll": "View All",
     "needHelp": "Need Help?",
     "viewGuide": "View Guide",
+    "helpDescription": "Explore our guides and tutorials for citizens.",
     "citizen": "Citizen",
     "staff": "Staff",
     "admin": "Admin",
@@ -210,5 +211,43 @@
     "subtitle": "Discover and support civic issues reported in your community.",
     "locationHint": "Enable location access for nearby sorting. Currently sorting by top voted.",
     "noComplaints": "No complaints found in the public feed yet. Be the first to report an issue!"
+  },
+  "help": {
+    "title": "User Guide",
+    "subtitle": "Learn how to use FixMyCity to improve your neighborhood.",
+    "reportTitle": "How to report a complaint",
+    "reportDesc": "To report a new issue, navigate to the \"Report Issue\" page from the sidebar. Fill in the title, select a relevant category, provide the location, and write a detailed description. Uploading a clear photo of the issue helps our team assess and prioritize the repair more effectively.",
+    "lifecycleTitle": "Complaint lifecycle explanation",
+    "lifecycleSubtitle": "Every reported issue goes through a structured process:",
+    "statuses": {
+      "submitted": {
+        "label": "SUBMITTED",
+        "desc": "Your report has been received and is waiting for initial review."
+      },
+      "underReview": {
+        "label": "UNDER REVIEW",
+        "desc": "An administrator is verifying the details and assessing priority."
+      },
+      "assigned": {
+        "label": "ASSIGNED",
+        "desc": "The issue has been routed to the appropriate city department."
+      },
+      "inProgress": {
+        "label": "IN PROGRESS",
+        "desc": "A repair crew has been dispatched and work is underway."
+      },
+      "resolved": {
+        "label": "RESOLVED",
+        "desc": "The work is complete and the issue has been fixed."
+      },
+      "rejected": {
+        "label": "REJECTED",
+        "desc": "The report was invalid or falls outside city jurisdiction."
+      }
+    },
+    "trackTitle": "How to track complaint status",
+    "trackDesc": "You can monitor all your reports in the \"My Complaints\" section. Each report shows a status badge and a priority level. Clicking on a specific complaint will show you a detailed timeline of all actions taken by city officials.",
+    "adminTitle": "Admin complaint workflow",
+    "adminDesc": "Administrators use the Admin Dashboard to oversee city-wide issues. They can filter reports by priority, assign them to specific departments (Road, Water, Electricity, etc.), and update the status as work progresses. This ensures that every citizen report is handled by the right team."
   }
 }
