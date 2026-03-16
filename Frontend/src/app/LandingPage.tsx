@@ -21,7 +21,7 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 
-import logo from '../assets/logo.png';
+import { Logo } from '../components/Logo';
 
 export const LandingPage: React.FC = () => {
   const { t } = useTranslation();
@@ -35,7 +35,7 @@ export const LandingPage: React.FC = () => {
             className="flex items-center"
           >
             <Link to="/">
-              <img src={logo} alt="FixMyCity" className="h-12 w-auto object-contain" />
+              <Logo iconSize="w-10 h-10" textSize="text-xl" />
             </Link>
           </motion.div>
           <motion.div 
@@ -292,10 +292,7 @@ export const LandingPage: React.FC = () => {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-[#2563EB] rounded-lg flex items-center justify-center">
-                  <AlertCircle className="text-white w-5 h-5" />
-                </div>
-                <span className="text-xl font-bold text-zinc-900 tracking-tight">FixMyCity</span>
+                <Logo iconSize="w-8 h-8" textSize="text-xl" />
               </div>
               <p className="text-zinc-500 max-w-sm">
                 {t('common.footerDesc')}

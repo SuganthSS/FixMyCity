@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { getNotifications, markAsRead, markAllAsRead } from '../services/notificationApi';
 import { Notification } from '../types';
 
-import logo from '../assets/logo.png';
+import { Logo } from './Logo';
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -65,9 +65,8 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-72 bg-white flex flex-col h-screen sticky top-0 z-20 shadow-premium border-r border-slate-100">
-      <div className="p-8 flex items-center gap-3">
-        <img src={logo} alt="FixMyCity" className="w-10 h-10 object-contain" />
-        <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">FixMyCity</span>
+      <div className="p-8">
+        <Logo iconSize="w-10 h-10" textSize="text-2xl" />
       </div>
 
       <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">

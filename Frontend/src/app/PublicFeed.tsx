@@ -6,20 +6,7 @@ import { MapPin, ArrowUpCircle, Clock, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { getFullImageUrl } from '../lib/utils';
-
-// Haversine formula to calculate distance between two coordinates
-const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
+import { getFullImageUrl, calculateHaversineDistance } from '../lib/utils';
 
 export const PublicFeed: React.FC = () => {
   const { user } = useAuth();
@@ -85,30 +72,40 @@ export const PublicFeed: React.FC = () => {
     }
   };
 
-  const sortedComplaints = useMemo(() => {
-    return [...complaints].sort((a, b) => {
-      // If we have user location and neither complaint is missing coordinates
-      if (userLocation && a.latitude && a.longitude && b.latitude && b.longitude) {
-        const distA = getDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude);
-        const distB = getDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude);
+  const filteredAndSortedComplaints = useMemo(() => {
+    let result = [...complaints];
+
+    // If location is granted, filter by 25km
+    if (userLocation) {
+      result = result.filter(c => {
+        if (!c.latitude || !c.longitude) return false;
+        const distance = calculateHaversineDistance(userLocation.lat, userLocation.lng, c.latitude, c.longitude);
+        return distance <= 25;
+      });
+
+      // Sort by distance first then upvotes
+      result.sort((a, b) => {
+        const distA = calculateHaversineDistance(userLocation.lat, userLocation.lng, a.latitude!, a.longitude!);
+        const distB = calculateHaversineDistance(userLocation.lat, userLocation.lng, b.latitude!, b.longitude!);
         
-        // Sort by distance first (closest first)
-        // Only if difference is significant (e.g., > 1km), otherwise sort by upvotes
-        if (Math.abs(distA - distB) > 1) {
+        if (Math.abs(distA - distB) > 0.1) { // 100m difference for distance priority
           return distA - distB;
         }
-      }
-      
-      // Secondary sort (or primary if location denied): upvotes
-      const upvotesA = a.upvotes?.length || 0;
-      const upvotesB = b.upvotes?.length || 0;
-      if (upvotesA !== upvotesB) {
-        return upvotesB - upvotesA; // Highest first
-      }
 
-      // Final fallback: newest first
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+        const upvotesA = a.upvotes?.length || 0;
+        const upvotesB = b.upvotes?.length || 0;
+        return upvotesB - upvotesA;
+      });
+    } else {
+      // If location denied, sort by upvotes only
+      result.sort((a, b) => {
+        const upvotesA = a.upvotes?.length || 0;
+        const upvotesB = b.upvotes?.length || 0;
+        return upvotesB - upvotesA;
+      });
+    }
+
+    return result;
   }, [complaints, userLocation]);
 
   if (loading) {
@@ -125,16 +122,23 @@ export const PublicFeed: React.FC = () => {
         <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">{t('publicFeed.title')}</h1>
         <p className="text-zinc-500 mt-1">{t('publicFeed.subtitle')}</p>
         
-        {locationDenied && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-4 py-3 rounded-lg border border-blue-100 max-w-md">
-            <Info className="w-4 h-4 shrink-0" />
-            <p>{t('publicFeed.locationHint')}</p>
-          </div>
-        )}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {userLocation ? (
+             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-sm font-bold shadow-sm">
+                <MapPin className="w-4 h-4" />
+                <span>Found {filteredAndSortedComplaints.length} issues within 25km of your location</span>
+             </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-4 py-3 rounded-lg border border-blue-100 max-w-md">
+              <Info className="w-4 h-4 shrink-0" />
+              <p>Enable location to see issues near you (within 25km)</p>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedComplaints.map((complaint, i) => {
+        {filteredAndSortedComplaints.map((complaint, i) => {
           const upvotes = complaint.upvotes || [];
           const hasUpvoted = user ? upvotes.includes(user.id) : false;
           
@@ -194,7 +198,7 @@ export const PublicFeed: React.FC = () => {
           );
         })}
 
-        {sortedComplaints.length === 0 && (
+        {filteredAndSortedComplaints.length === 0 && (
           <div className="col-span-full py-12 text-center text-zinc-500 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
             {t('publicFeed.noComplaints')}
           </div>

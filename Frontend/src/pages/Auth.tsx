@@ -8,14 +8,13 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { motion } from 'motion/react';
 
-import logo from '../assets/logo.png';
+import { Logo } from '../components/Logo';
 
 const AuthHeader = () => (
   <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 py-4">
     <div className="max-w-7xl mx-auto flex justify-between items-center">
       <Link to="/" className="flex items-center gap-2">
-        <img src={logo} alt="FixMyCity" className="w-10 h-10 object-contain" />
-        <span className="text-xl font-bold text-zinc-900 tracking-tight">FixMyCity</span>
+        <Logo iconSize="w-10 h-10" textSize="text-xl" />
       </Link>
       <LanguageSwitcher />
     </div>
@@ -51,11 +50,9 @@ export const LoginPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-            <img src={logo} alt="FixMyCity" className="w-full h-full object-contain" />
-          </div>
-          <h1 className="text-3xl font-bold text-zinc-900">{t('auth.welcomeBack')}</h1>
+        <div className="text-center mb-10 flex flex-col items-center">
+          <Logo variant="vertical" iconSize="w-16 h-16" textSize="text-4xl" />
+          <h1 className="text-3xl font-bold text-zinc-900 mt-6">{t('auth.welcomeBack')}</h1>
           <p className="text-zinc-500 mt-2">{t('auth.signInDesc')}</p>
         </div>
 
@@ -172,11 +169,9 @@ export const RegisterPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-            <img src={logo} alt="FixMyCity" className="w-full h-full object-contain" />
-          </div>
-          <h1 className="text-3xl font-bold text-zinc-900">{t('common.createAccount')}</h1>
+        <div className="text-center mb-10 flex flex-col items-center">
+          <Logo variant="vertical" iconSize="w-16 h-16" textSize="text-4xl" />
+          <h1 className="text-3xl font-bold text-zinc-900 mt-6">{t('common.createAccount')}</h1>
           <p className="text-zinc-500 mt-2">{t('auth.createAccountDesc')}</p>
         </div>
 

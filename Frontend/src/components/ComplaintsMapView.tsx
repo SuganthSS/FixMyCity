@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
-import { MapPin, Info, ArrowUpRight, MessageSquare, Clock, AlertCircle } from 'lucide-react';
+import { MapPin, Info, ArrowUpRight, Clock, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Complaint, ComplaintStatus } from '../types';
+import { useTranslation } from 'react-i18next';
 import { Badge } from './UI';
 
 // Status Color Mapping
@@ -13,6 +15,38 @@ const statusColorMap: Record<string, string> = {
   IN_PROGRESS: '#8B5CF6',
   RESOLVED: '#10B981',
   REJECTED: '#EF4444',
+};
+
+// Functional component to handle programmatic map updates
+const MapViewHandler: React.FC<{
+  bounds?: [[number, number], [number, number]];
+  center?: [number, number];
+}> = ({ bounds, center }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (bounds) {
+      const leafletBounds = L.latLngBounds(bounds[0], bounds[1]);
+      // Use fitBounds to zoom into the 25km area
+      map.fitBounds(leafletBounds, { padding: [20, 20] });
+      // Restrict panning to this area
+      map.setMaxBounds(leafletBounds);
+      // Prevent zooming out beyond the 25km area
+      map.setMinZoom(12);
+    } else {
+      // Restore defaults for full India view
+      const INDIA_BOUNDS: L.LatLngBoundsExpression = [[5.5, 66.0], [38.5, 99.0]];
+      map.setMaxBounds(INDIA_BOUNDS);
+      map.setMinZoom(5);
+      if (center) {
+        map.setView(center, 15);
+      } else {
+        map.fitBounds(INDIA_BOUNDS);
+      }
+    }
+  }, [map, bounds, center]);
+
+  return null;
 };
 
 // Create a custom colored marker icon based on status
@@ -34,7 +68,24 @@ const getStatusIcon = (status: string) => {
   });
 };
 
-// Auto-fit bounds to all markers
+// User location "blue dot" icon
+const getUserLocationIcon = () => {
+  return L.divIcon({
+    html: `
+      <div class="relative flex items-center justify-center">
+        <div class="absolute w-10 h-10 rounded-full bg-blue-500 opacity-20 animate-pulse"></div>
+        <div class="relative w-5 h-5 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+        </div>
+      </div>
+    `,
+    className: '',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+  });
+};
+
+// Auto-fit bounds to all markers (only if no manual bounds/center provided)
 const FitBounds: React.FC<{ positions: [number, number][] }> = ({ positions }) => {
   const map = useMap();
   useEffect(() => {
@@ -46,7 +97,6 @@ const FitBounds: React.FC<{ positions: [number, number][] }> = ({ positions }) =
   return null;
 };
 
-// Invalidate map size when rendered inside tabs
 const MapResizer: React.FC = () => {
   const map = useMap();
   useEffect(() => {
@@ -58,16 +108,19 @@ const MapResizer: React.FC = () => {
 
 interface ComplaintsMapViewProps {
   complaints: Complaint[];
-  /** If true, show citizenName and citizenId in popup (Admin). If false, exclude them (Staff). */
   showCitizenInfo?: boolean;
+  center?: [number, number];
+  zoom?: number;
+  bounds?: [[number, number], [number, number]];
 }
-
 
 export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
   complaints,
-  showCitizenInfo = false,
+  center,
+  bounds,
 }) => {
-  // Filter: only active complaints with valid coordinates
+  const { t } = useTranslation();
+
   const activeComplaints = complaints.filter(
     (c) =>
       c.status !== ComplaintStatus.RESOLVED &&
@@ -81,51 +134,34 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
     c.longitude!,
   ]);
 
-  // Default center: India center, or first marker
-  const defaultCenter: [number, number] =
-    positions.length > 0 ? positions[0] : [20.5937, 78.9629];
-
-  if (activeComplaints.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[500px] text-center">
-        <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <MapPin className="w-6 h-6 text-[#2563EB]" />
-        </div>
-        <h3 className="text-lg font-bold text-zinc-900 mb-1">No Active Complaints on Map</h3>
-        <p className="text-sm text-zinc-500 max-w-sm">
-          There are no active complaints with location data to display. Resolved and rejected complaints are excluded.
-        </p>
-      </div>
-    );
-  }
-
   const INDIA_BOUNDS: L.LatLngBoundsExpression = [[5.5, 66.0], [38.5, 99.0]];
 
   return (
-    <div className="h-[500px] rounded-2xl border-4 border-white shadow-premium relative z-0 group">
-      <div className="absolute inset-0 bg-slate-50 flex items-center justify-center z-50 transition-opacity duration-700 pointer-events-none opacity-0 group-[.loading]:opacity-100">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-
+    <div className="h-[600px] rounded-2xl border-4 border-white shadow-premium relative z-0 group">
       <MapContainer
-        bounds={INDIA_BOUNDS}
-        zoom={5}
+        center={center || [20.5937, 78.9629]}
+        zoom={center ? 15 : 5}
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
         minZoom={5}
-        maxBounds={INDIA_BOUNDS}
-        maxBoundsViscosity={1.0}
         worldCopyJump={false}
         className="rounded-2xl"
       >
+        <MapViewHandler bounds={bounds} center={center} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           noWrap={true}
-          bounds={INDIA_BOUNDS}
         />
-        <FitBounds positions={positions} />
+        {!center && !bounds && <FitBounds positions={positions} />}
         <MapResizer />
+
+        {/* User Location Marker */}
+        {center && (
+          <Marker position={center} icon={getUserLocationIcon()} zIndexOffset={1000}>
+            <Popup>Your current location</Popup>
+          </Marker>
+        )}
 
         {activeComplaints.map((complaint) => (
           <Marker
