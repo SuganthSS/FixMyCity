@@ -44,7 +44,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6 pt-24">
       <AuthHeader />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -164,7 +164,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6 pt-24">
       <AuthHeader />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
