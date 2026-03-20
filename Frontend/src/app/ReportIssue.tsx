@@ -29,7 +29,7 @@ const DefaultIcon = L.icon({
 
 // Custom highlighted marker for selection
 const SelectionIcon = L.divIcon({
-  html: `<div class="w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center animate-bounce">
+  html: `<div class="w-8 h-8 bg-[#000000] rounded-full border-4 border-white shadow-lg flex items-center justify-center animate-bounce">
           <div class="w-2 h-2 bg-white rounded-full"></div>
          </div>`,
   className: '',
@@ -165,14 +165,14 @@ export const ReportIssuePage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">{t('report.title')}</h1>
-        <p className="text-zinc-500 mt-1">{t('report.desc')}</p>
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+      <header className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">{t('report.title')}</h1>
+        <p className="text-zinc-500 mt-1 text-sm md:text-base">{t('report.desc')}</p>
       </header>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      <form onSubmit={handleSubmit} className="flex flex-col lg:grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
           <Card className="p-6 space-y-6">
             <div className="space-y-1.5">
               <Label htmlFor="title">{t('report.issueTitle')}</Label>
@@ -191,7 +191,7 @@ export const ReportIssuePage: React.FC = () => {
                 <div className="relative">
                   <select
                     id="category"
-                    className="w-full h-10 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20"
+                    className="w-full h-10 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-black/10"
                     value={category}
                     onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
                   >
@@ -258,7 +258,7 @@ export const ReportIssuePage: React.FC = () => {
                       name="recurring"
                       checked={recurringIssue === true}
                       onChange={() => setRecurringIssue(true)}
-                      className="w-4 h-4 text-[#2563EB]"
+                      className="w-4 h-4 text-[#000000]"
                     />
                     <span className="text-sm font-medium">{t('common.yes', 'Yes')}</span>
                   </label>
@@ -268,7 +268,7 @@ export const ReportIssuePage: React.FC = () => {
                       name="recurring"
                       checked={recurringIssue === false}
                       onChange={() => setRecurringIssue(false)}
-                      className="w-4 h-4 text-[#2563EB]"
+                      className="w-4 h-4 text-[#000000]"
                     />
                     <span className="text-sm font-medium">{t('common.no', 'No')}</span>
                   </label>
@@ -282,15 +282,15 @@ export const ReportIssuePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={getUserLocation}
-                  className="text-xs font-bold text-[#2563EB] flex items-center gap-1 hover:underline"
+                  className="text-xs font-bold text-[#000000] flex items-center gap-1 hover:underline"
                 >
                   <Locate className="w-3 h-3" />
                   {t('report.useMyLocation')}
                 </button>
               </div>
-              <div className="h-[400px] rounded-2xl border-4 border-white shadow-premium z-0 relative group">
+              <div className="h-[300px] md:h-[400px] rounded-2xl border-4 border-white shadow-premium z-0 relative group">
                 <div className="absolute inset-0 bg-slate-50 flex items-center justify-center z-50 transition-opacity duration-700 pointer-events-none opacity-0 group-[.loading]:opacity-100">
-                  <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-10 h-10 border-4 border-[#000000] border-t-transparent rounded-full animate-spin"></div>
                 </div>
                 <MapContainer 
                   bounds={INDIA_BOUNDS}
@@ -322,7 +322,7 @@ export const ReportIssuePage: React.FC = () => {
               <textarea
                 id="description"
                 rows={5}
-                className="flex w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
+                className="flex w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#000000] focus-visible:ring-offset-2"
                 placeholder={t('report.descriptionPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -345,7 +345,7 @@ export const ReportIssuePage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-zinc-200 rounded-2xl cursor-pointer hover:bg-zinc-50 hover:border-[#2563EB]/50 transition-all group">
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-zinc-200 rounded-2xl cursor-pointer hover:bg-zinc-50 hover:border-[#374151]/50 transition-all group">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <div className="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <Camera className="w-6 h-6 text-zinc-400" />
@@ -370,23 +370,23 @@ export const ReportIssuePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <Card className="p-6 bg-blue-50/80 border-blue-100/50 text-slate-900 border">
+        <div className="space-y-6 order-1 lg:order-2">
+          <Card className="p-6 bg-gray-50 border-gray-200/50 text-slate-900 border">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-[#2563EB]" />
+              <AlertCircle className="w-5 h-5 text-[#000000]" />
               {t('report.submissionTips')}
             </h3>
             <ul className="space-y-3 text-sm text-slate-600 font-medium">
               <li className="flex gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#2563EB] mt-1.5 shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#000000] mt-1.5 shrink-0" />
                 {t('report.tips.0')}
               </li>
               <li className="flex gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#2563EB] mt-1.5 shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#000000] mt-1.5 shrink-0" />
                 {t('report.tips.1')}
               </li>
               <li className="flex gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#2563EB] mt-1.5 shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#000000] mt-1.5 shrink-0" />
                 {t('report.tips.2')}
               </li>
             </ul>

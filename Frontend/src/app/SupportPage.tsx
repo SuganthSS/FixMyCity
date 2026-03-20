@@ -18,7 +18,7 @@ export const SupportPage: React.FC = () => {
       <Card className="h-[600px] flex flex-col overflow-hidden">
         <div className="p-6 border-b border-zinc-100 flex items-center gap-4 bg-zinc-50">
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-            <User className="w-6 h-6 text-[#2563EB]" />
+            <User className="w-6 h-6 text-[#000000]" />
           </div>
           <div>
             <h3 className="font-bold text-zinc-900">Support Agent</h3>
@@ -45,7 +45,7 @@ export const SupportPage: React.FC = () => {
             <input 
               type="text" 
               placeholder="Type your message..." 
-              className="flex-1 bg-zinc-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#2563EB]/20"
+              className="flex-1 bg-zinc-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-black/10"
             />
             <Button size="icon" className="rounded-xl">
               <Send className="w-4 h-4" />

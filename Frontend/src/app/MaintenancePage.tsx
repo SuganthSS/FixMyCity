@@ -25,8 +25,8 @@ export const MaintenancePage: React.FC = () => {
         {maintenanceItems.map((item) => (
           <Card key={item.id} className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-[#000000]" />
               </div>
               <Badge>{item.status}</Badge>
             </div>

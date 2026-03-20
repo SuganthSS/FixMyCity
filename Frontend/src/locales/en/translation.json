@@ -73,7 +73,9 @@
     "waterLeak": "Water Leak",
     "streetlightIssue": "Streetlight Issue",
     "garbageIssue": "Garbage Issue",
-    "drainageIssue": "Drainage Issue"
+    "drainageIssue": "Drainage Issue",
+    "yes": "Yes",
+    "no": "No"
   },
   "dashboard": {
     "welcomeBack": "Welcome back, {{name}}!",
@@ -173,7 +175,78 @@
         "title": "Community transparency",
         "desc": "Public dashboard for city-wide awareness."
       }
-    }
+    },
+    "undefined": {},
+    "mockup": {
+      "weeklyActivity": "Weekly Activity",
+      "issuesReported": "247 Issues Reported",
+      "issueResolved": "Issue Resolved Successfully"
+    },
+    "darkStats": {
+      "badge": "Live Platform Metrics",
+      "title1": "Report any civic issue",
+      "title2": "in under 2 minutes.",
+      "desc": "Simple, fast, and transparent — from submission to resolution. Join thousands of citizens making a difference.",
+      "activeIssues": "Active Issues",
+      "activeIssuesSub": "Currently being reviewed",
+      "resolved": "Resolved",
+      "resolvedSub": "Successfully fixed",
+      "citizensHelped": "Citizens Helped",
+      "citizensHelpedSub": "Community members"
+    },
+    "statsRow": {
+      "timeLabel": "Time to report an issue",
+      "timeValue": "2 min",
+      "resLabel": "Resolution rate",
+      "resValue": "81%",
+      "coverageLabel": "Local coverage radius",
+      "coverageValue": "25km"
+    },
+    "workflow": {
+      "title1": "Everything connects.",
+      "title2": "Nothing slows you down.",
+      "point1": "Report issues with photo and location",
+      "point2": "Track status from submission to resolution",
+      "point3": "Community upvoting for priority issues",
+      "point4": "Real-time notifications on updates",
+      "step1": "Step 1",
+      "step1Title": "Report Issue",
+      "step1Desc": "Fill in details and pin location",
+      "step2": "Step 2",
+      "step2Title": "Staff Reviews",
+      "step2Desc": "Department assigned and assessed",
+      "step3": "Step 3",
+      "step3Title": "Issue Resolved",
+      "step3Desc": "Citizen notified on completion"
+    },
+    "faq": {
+      "badge": "Common Questions",
+      "title": "Common Questions",
+      "desc": "Everything you need to know about the platform.",
+      "q1": "How do I report a civic issue?",
+      "a1": "Simply sign in to your citizen account, click 'Report Issue', pin the location on the map, and upload a photo with details.",
+      "q2": "How long does resolution take?",
+      "a2": "Each department has specific SLAs. You'll receive real-time updates as the status changes from submitted to resolved.",
+      "q3": "Is my personal information private?",
+      "a3": "Yes. Your privacy is our priority. Personal details are only visible to authorized department staff handling your case.",
+      "q4": "Can I track my complaint status?",
+      "a4": "Absolutely. Every report gets a unique ID (e.g., #FMC-1042) that you can track in real-time on your dashboard.",
+      "q5": "What areas does FixMyCity cover?",
+      "a5": "Currently, we cover all major metropolitan zones and surrounding districts. We are expanding to more areas every month."
+    },
+    "cta": {
+      "title1": "Start reporting",
+      "title2": "issues in under",
+      "title3": "2 minutes.",
+      "desc": "Join citizens helping build a better city.",
+      "free": "Free to use",
+      "location": "Location based",
+      "realtime": "Real-time updates",
+      "button": "Get Started"
+    },
+    "howItWorksDesc": "Transparent and efficient lifecycle for every reported grievance.",
+    "viewLiveFeed": "View Live Feed",
+    "platformDesc": "Supercharging civic governance with a suite of professional-grade tools."
   },
   "auth": {
     "welcomeBack": "Welcome Back",
@@ -204,7 +277,11 @@
       "Mention if the issue is causing immediate danger."
     ],
     "submit": "Submit Report",
-    "termsHint": "By submitting, you agree to our terms of service and confirm the information provided is accurate."
+    "termsHint": "By submitting, you agree to our terms of service and confirm the information provided is accurate.",
+    "landmark": "Landmark",
+    "landmarkPlaceholder": "e.g. Near City Hospital",
+    "issueDate": "Issue Date",
+    "recurringIssue": "Recurring Issue?"
   },
   "publicFeed": {
     "title": "Public Feed",
@@ -249,5 +326,114 @@
     "trackDesc": "You can monitor all your reports in the \"My Complaints\" section. Each report shows a status badge and a priority level. Clicking on a specific complaint will show you a detailed timeline of all actions taken by city officials.",
     "adminTitle": "Admin complaint workflow",
     "adminDesc": "Administrators use the Admin Dashboard to oversee city-wide issues. They can filter reports by priority, assign them to specific departments (Road, Water, Electricity, etc.), and update the status as work progresses. This ensures that every citizen report is handled by the right team."
+  },
+  "landingEnhancements": {
+    "hero": {
+      "weeklyActivity": "Issues Reported This Week",
+      "issueResolved": "Issue Resolved Successfully"
+    },
+    "stats": {
+      "liveMetrics": "Live Platform Metrics",
+      "headline": "Report any civic issue in under 2 minutes.",
+      "subtext": "Simple, fast, and transparent — from submission to resolution. Join thousands of citizens making a difference.",
+      "activeIssues": "Active Issues",
+      "activeIssuesSub": "Currently being reviewed",
+      "resolved": "Resolved",
+      "resolvedSub": "Successfully fixed",
+      "citizensHelped": "Citizens Helped",
+      "citizensHelpedSub": "Community members"
+    },
+    "howItWorks": {
+      "timeToReport": "Time to report an issue",
+      "resolutionRate": "Resolution rate",
+      "coverage": "Local coverage radius"
+    },
+    "workflow": {
+      "headline": "Everything connects. Nothing slows you down.",
+      "point1": "Report issues with photo and location",
+      "point2": "Track status from submission to resolution",
+      "point3": "Community upvoting for priority issues",
+      "point4": "Real-time notifications on updates",
+      "step1": "Step 1",
+      "step1Title": "Report Issue",
+      "step1Desc": "Fill in details and pin location",
+      "step2": "Step 2",
+      "step2Title": "Staff Reviews",
+      "step2Desc": "Department assigned and assessed",
+      "step3": "Step 3",
+      "step3Title": "Issue Resolved",
+      "step3Desc": "Citizen notified on completion"
+    },
+    "faq": {
+      "title": "Common Questions",
+      "subtitle": "Everything you need to know about the platform.",
+      "q1": "How do I report a civic issue?",
+      "a1": "Simply sign in to your citizen account, click 'Report Issue', pin the location on the map, and upload a photo with details.",
+      "q2": "How long does resolution take?",
+      "a2": "Each department has specific SLAs. You'll receive real-time updates as the status changes from submitted to resolved.",
+      "q3": "Is my personal information private?",
+      "a3": "Yes. Your privacy is our priority. Personal details are only visible to authorized department staff handling your case.",
+      "q4": "Can I track my complaint status?",
+      "a4": "Absolutely. Every report gets a unique ID (e.g., #FMC-1042) that you can track in real-time on your dashboard.",
+      "q5": "What areas does FixMyCity cover?",
+      "a5": "Currently, we cover all major metropolitan zones and surrounding districts. We are expanding to more areas every month.",
+      "card": {
+        "title": "Start reporting issues in under 2 minutes.",
+        "subtitle": "Join citizens helping build a better city.",
+        "feature1": "Free to use",
+        "feature2": "Location based",
+        "feature3": "Real-time updates",
+        "getStarted": "Get Started",
+        "learnMore": "Learn More"
+      }
+    }
+  },
+  "security": {
+    "changePassword": "Change Password",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "updatePassword": "Update Password",
+    "protectAccount": "Protect your account",
+    "twoFactorDesc": "Add an extra layer of security to your account by requiring a code from your phone.",
+    "authenticatorApp": "Authenticator App",
+    "authenticatorDesc": "Use an app like Google Authenticator"
+  },
+  "staffDashboard": {
+    "portal": "Staff Portal",
+    "portalDesc": "Manage and resolve civic issues assigned to your department with real-time tracking.",
+    "exportQueue": "Export Queue",
+    "viewMap": "View Map",
+    "searchPlaceholder": "Search...",
+    "statusFilter": "Status:",
+    "all": "All",
+    "unassigned": "Unassigned",
+    "details": "Details",
+    "noComplaints": "No complaints found matching your filters.",
+    "clearFilters": "Clear all filters",
+    "communitySupport": "Community Support",
+    "urgency": "Urgency",
+    "tableHeaders": {
+      "issueDetails": "Issue Details",
+      "categoryPriority": "Category & Priority",
+      "updateStatus": "Update status",
+      "urgency": "Urgency",
+      "department": "Department",
+      "action": "Action"
+    },
+    "stats": {
+      "totalAssigned": "Total Assigned",
+      "pendingReview": "Pending Review",
+      "inProgress": "In Progress",
+      "resolved": "Resolved"
+    }
+  },
+  "mapView": {
+    "userLocation": "Your current location",
+    "createdOn": "Created {{date}}",
+    "categoryLabel": "Category:",
+    "viewDetails": "View Details",
+    "statusLegend": "Status Legend"
   }
 }

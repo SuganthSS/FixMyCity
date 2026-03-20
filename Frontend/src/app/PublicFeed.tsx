@@ -111,25 +111,25 @@ export const PublicFeed: React.FC = () => {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[50vh]">
-        <div className="w-10 h-10 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-[#000000] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       <header>
-        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">{t('publicFeed.title')}</h1>
-        <p className="text-zinc-500 mt-1">{t('publicFeed.subtitle')}</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">{t('publicFeed.title')}</h1>
+        <p className="text-zinc-500 mt-1 text-sm md:text-base">{t('publicFeed.subtitle')}</p>
         
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {userLocation ? (
-             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-sm font-bold shadow-sm">
-                <MapPin className="w-4 h-4" />
-                <span>Found {filteredAndSortedComplaints.length} issues within 25km of your location</span>
+             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-xs md:text-sm font-bold shadow-sm">
+                <MapPin className="w-3.5 h-3.5 md:w-4 h-4" />
+                <span>Found {filteredAndSortedComplaints.length} issues within 25km</span>
              </div>
           ) : (
-            <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-4 py-3 rounded-lg border border-blue-100 max-w-md">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-[#374151] bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 max-w-md w-full">
               <Info className="w-4 h-4 shrink-0" />
               <p>Enable location to see issues near you (within 25km)</p>
             </div>
@@ -137,7 +137,7 @@ export const PublicFeed: React.FC = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredAndSortedComplaints.map((complaint, i) => {
           const upvotes = complaint.upvotes || [];
           const hasUpvoted = user ? upvotes.includes(user.id) : false;
@@ -168,7 +168,7 @@ export const PublicFeed: React.FC = () => {
                   
                   <div className="mt-auto space-y-3">
                     <div className="flex items-center gap-2 text-[12px] text-zinc-500 font-medium">
-                      <MapPin className="w-4 h-4 text-[#2563EB]" />
+                      <MapPin className="w-4 h-4 text-[#000000]" />
                       <span className="line-clamp-1">{complaint.location}</span>
                     </div>
                     

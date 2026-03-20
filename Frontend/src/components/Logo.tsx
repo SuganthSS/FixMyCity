@@ -24,7 +24,7 @@ export const Logo: React.FC<LogoProps> = ({
       className
     )}>
       <div className={cn(
-        "bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20",
+        "bg-[#000000] rounded-xl flex items-center justify-center shadow-lg shadow-black/20",
         iconSize
       )}>
         <MapPin className={cn(
@@ -35,7 +35,7 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
       {!iconOnly && (
         <span className={cn(
-          "font-black tracking-wide uppercase bg-gradient-to-r from-[#1D4ED8] to-[#60A5FA] bg-clip-text text-transparent",
+          "font-black tracking-wide uppercase bg-gradient-to-r from-[#000000] to-[#374151] bg-clip-text text-transparent",
           textSize
         )}>
           FixMyCity

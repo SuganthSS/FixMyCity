@@ -32,7 +32,7 @@ export const ComplaintDetailsPage: React.FC = () => {
     return (
       <div className="p-8 text-center">
         <h2 className="text-2xl font-bold">{t('complaintDetails.notFound')}</h2>
-        <Link to="/dashboard" className="text-[#2563EB] hover:underline mt-4 inline-block">{t('complaintDetails.back')}</Link>
+        <Link to="/dashboard" className="text-[#000000] hover:underline mt-4 inline-block">{t('complaintDetails.back')}</Link>
       </div>
     );
   }
@@ -40,25 +40,26 @@ export const ComplaintDetailsPage: React.FC = () => {
   const canSeeReporter = user?.role === UserRole.ADMIN || (user?.role === UserRole.CITIZEN && user.id === complaint.citizenId);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
-      <header className="flex items-center justify-between">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 md:space-y-8">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" className="rounded-full" onClick={() => window.history.back()}>
+          <Button variant="outline" size="icon" className="rounded-full shrink-0" onClick={() => window.history.back()}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="text-xs font-mono text-zinc-400">#{complaint.id}</span>
-              <Badge variant={complaint.status}>{t(`common.${complaint.status.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`)}</Badge>
+              <Badge variant={complaint.status} className="text-[10px] md:text-xs">{t(`common.${complaint.status.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`)}</Badge>
             </div>
-            <h1 className="text-2xl font-bold text-zinc-900">{complaint.title}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-zinc-900 truncate">{complaint.title}</h1>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon">
-            <Share2 className="w-4 h-4" />
+        <div className="flex items-center gap-2 sm:self-start">
+          <Button variant="outline" size="sm" className="rounded-xl px-4">
+            <Share2 className="w-4 h-4 mr-2" />
+            Share
           </Button>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="rounded-xl">
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </div>
@@ -81,7 +82,7 @@ export const ComplaintDetailsPage: React.FC = () => {
                 <p className="text-zinc-600 leading-relaxed">{complaint.description}</p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-zinc-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-zinc-100">
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{t('complaintDetails.category')}</p>
                   <p className="text-sm font-semibold text-zinc-900">{t(`common.${complaint.category.split(' ').map((word, i) => i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('')}`)}</p>
@@ -99,11 +100,11 @@ export const ComplaintDetailsPage: React.FC = () => {
                   <p className="text-sm font-semibold text-zinc-900">{complaint.landmark || 'N/A'}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Issue Noticed On</p>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Issue Date</p>
                   <p className="text-sm font-semibold text-zinc-900">{complaint.issueDate ? new Date(complaint.issueDate).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Recurring Issue</p>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Recurring</p>
                   <p className="text-sm font-semibold text-zinc-900">{complaint.recurringIssue ? 'Yes' : 'No'}</p>
                 </div>
               </div>
@@ -129,7 +130,7 @@ export const ComplaintDetailsPage: React.FC = () => {
             <h3 className="text-lg font-bold text-zinc-900 mb-6">{t('complaintDetails.locationDetails')}</h3>
             <div className="flex items-start gap-4 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0">
-                <MapPin className="w-5 h-5 text-[#2563EB]" />
+                <MapPin className="w-5 h-5 text-[#000000]" />
               </div>
               <div>
                 <p className="text-sm font-bold text-zinc-900">{complaint.location}</p>
@@ -154,7 +155,7 @@ export const ComplaintDetailsPage: React.FC = () => {
                   <div key={i} className="relative pl-8">
                     <div className={cn(
                       'absolute left-0 top-1.5 w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10',
-                      isLast ? 'bg-[#2563EB]' : 'bg-green-500'
+                      isLast ? 'bg-[#000000]' : 'bg-green-500'
                     )}>
                       {isLast ? (
                         <div className="w-1.5 h-1.5 rounded-full bg-white" />
@@ -166,10 +167,10 @@ export const ComplaintDetailsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <p className={cn(
                           "text-sm font-bold",
-                          isLast ? "text-[#2563EB]" : "text-zinc-900"
+                          isLast ? "text-[#000000]" : "text-zinc-900"
                         )}>
                           {t(`common.${event.status.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`)}
-                          {isLast && <span className="ml-2 text-[10px] bg-blue-50 text-[#2563EB] px-2 py-0.5 rounded-full uppercase tracking-wider">{t('complaintDetails.current')}</span>}
+                          {isLast && <span className="ml-2 text-[10px] bg-gray-100 text-[#000000] px-2 py-0.5 rounded-full uppercase tracking-wider">{t('complaintDetails.current')}</span>}
                         </p>
                         <p className="text-[10px] font-medium text-zinc-400">{new Date(event.timestamp).toLocaleDateString()}</p>
                       </div>
@@ -181,16 +182,16 @@ export const ComplaintDetailsPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="p-6 bg-blue-50/80 border-blue-100/50 text-slate-900 border">
+          <Card className="p-6 bg-gray-50 border-gray-200/50 text-slate-900 border">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                <MessageSquare className="w-5 h-5 text-[#2563EB]" />
+                <MessageSquare className="w-5 h-5 text-[#000000]" />
               </div>
               <h3 className="text-lg font-bold">{t('complaintDetails.contactSupport')}</h3>
             </div>
             <p className="text-sm text-slate-600 font-medium mb-6">{t('complaintDetails.supportDesc')}</p>
             <Link to="/support">
-              <Button className="w-full bg-[#2563EB] text-white hover:bg-blue-700">{t('complaintDetails.startChat')}</Button>
+              <Button className="w-full bg-[#000000] text-white hover:bg-[#1F2937]">{t('complaintDetails.startChat')}</Button>
             </Link>
           </Card>
         </div>

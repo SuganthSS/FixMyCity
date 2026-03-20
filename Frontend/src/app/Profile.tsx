@@ -60,7 +60,7 @@ export const ProfilePage: React.FC = () => {
               className="w-32 h-32 rounded-3xl border-4 border-white shadow-xl object-cover"
               referrerPolicy="no-referrer"
             />
-            <label className="absolute bottom-0 right-0 p-2 bg-[#2563EB] text-white rounded-xl shadow-lg cursor-pointer hover:scale-110 transition-all">
+            <label className="absolute bottom-0 right-0 p-2 bg-[#000000] text-white rounded-xl shadow-lg cursor-pointer hover:scale-110 transition-all">
               <Camera className="w-4 h-4" />
               <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
             </label>

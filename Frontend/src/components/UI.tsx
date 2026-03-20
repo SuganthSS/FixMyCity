@@ -16,12 +16,12 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const variants = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-premium hover:shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
+    primary: 'bg-gradient-to-r from-[#000000] to-[#1F2937] text-white shadow-premium hover:shadow-black/15 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
     success: 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-premium hover:shadow-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
     warning: 'bg-gradient-to-r from-amber-500 to-amber-400 text-white shadow-premium hover:shadow-amber-500/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
     accent: 'bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-premium hover:shadow-violet-500/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
     secondary: 'bg-slate-50 text-slate-900 shadow-soft hover:bg-slate-100 border-none',
-    outline: 'border-2 border-slate-100 bg-transparent hover:border-blue-100 hover:bg-blue-50/50 text-slate-700',
+    outline: 'border-2 border-slate-200 bg-transparent hover:border-[#374151] hover:bg-gray-50 text-slate-700',
     ghost: 'hover:bg-slate-100/50 text-slate-600',
     danger: 'bg-gradient-to-r from-rose-600 to-rose-500 text-white shadow-premium hover:shadow-rose-500/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
     glass: 'glass hover:bg-white/90 text-slate-900',
@@ -60,7 +60,7 @@ export const Card: React.FC<{ children: React.ReactNode; className?: string; gla
   hover = true
 }) => (
   <div className={cn(
-    'rounded-[32px] transition-all duration-500 overflow-hidden',
+    'rounded-2xl md:rounded-[32px] transition-all duration-500 overflow-hidden',
     glass ? 'glass' : 'bg-white shadow-premium',
     hover && 'hover:shadow-soft hover:-translate-y-1',
     className
@@ -72,7 +72,7 @@ export const Card: React.FC<{ children: React.ReactNode; className?: string; gla
 export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ className, ...props }) => (
   <input
     className={cn(
-      'flex h-12 w-full rounded-2xl border-2 border-slate-100 bg-white px-5 py-2 text-sm transition-all placeholder:text-slate-400 focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 outline-none disabled:cursor-not-allowed disabled:opacity-50 shadow-soft',
+      'flex h-12 w-full rounded-2xl border-2 border-slate-200 bg-white px-5 py-2 text-sm transition-all placeholder:text-slate-400 focus:border-[#374151]/30 focus:ring-4 focus:ring-black/5 outline-none disabled:cursor-not-allowed disabled:opacity-50 shadow-soft',
       className
     )}
     {...props}
@@ -85,10 +85,10 @@ export const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ c
 
 export const Badge: React.FC<{ children: React.ReactNode; variant?: string; className?: string }> = ({ children, variant, className }) => {
   const variants: Record<string, string> = {
-    SUBMITTED: 'bg-blue-50 text-blue-600 border border-blue-100/50',
+    SUBMITTED: 'bg-amber-50 text-amber-700 border border-amber-100/50',
     UNDER_REVIEW: 'bg-violet-50 text-violet-600 border border-violet-100/50',
     ASSIGNED: 'bg-indigo-50 text-indigo-600 border border-indigo-100/50',
-    IN_PROGRESS: 'bg-blue-100/50 text-blue-700 border border-blue-200/50',
+    IN_PROGRESS: 'bg-purple-100/50 text-purple-700 border border-purple-200/50',
     RESOLVED: 'bg-emerald-50 text-emerald-600 border border-emerald-100/50',
     REJECTED: 'bg-rose-50 text-rose-600 border border-rose-100/50',
     HIGH: 'bg-rose-50 text-rose-600 font-bold border border-rose-100/50',

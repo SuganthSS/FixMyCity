@@ -28,8 +28,14 @@ import { getNotifications, markAsRead, markAllAsRead } from '../services/notific
 import { Notification } from '../types';
 
 import { Logo } from './Logo';
+import { Menu, X } from 'lucide-react';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const isAdmin = user?.role === UserRole.ADMIN;
 
@@ -64,10 +70,30 @@ export const Sidebar: React.FC = () => {
                 citizenLinks;
 
   return (
-    <aside className="w-72 bg-white flex flex-col h-screen sticky top-0 z-20 shadow-premium border-r border-slate-100">
-      <div className="p-8">
-        <Logo iconSize="w-10 h-10" textSize="text-2xl" />
-      </div>
+    <>
+      {/* Mobile Backdrop */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      <aside className={cn(
+        "w-72 bg-[#111827] flex flex-col h-screen fixed inset-y-0 left-0 z-50 lg:sticky top-0 shadow-premium border-r border-[#1F2937] transition-transform duration-300 lg:translate-x-0 lg:flex",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-8 flex items-center justify-between">
+          <Logo iconSize="w-10 h-10" textSize="text-2xl" className="[&_span]:!from-white [&_span]:!to-gray-400" />
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-white lg:hidden">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
       <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
         {links.map((link) => (
@@ -77,13 +103,13 @@ export const Sidebar: React.FC = () => {
             className={({ isActive }) => cn(
               'flex items-center gap-3 px-6 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300',
               isActive 
-                ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' 
-                : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-white/10 text-white shadow-sm border border-white/10' 
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
             )}
           >
             {({ isActive }) => (
               <>
-                <link.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-blue-600" : "text-slate-400")} />
+                <link.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "text-gray-500")} />
                 {link.label}
               </>
             )}
@@ -91,12 +117,12 @@ export const Sidebar: React.FC = () => {
         ))}
       </nav>
       <div className="p-6 mt-auto">
-        <div className="bg-slate-50 rounded-[2.5rem] p-6 mb-6 relative overflow-hidden group border border-slate-100 shadow-sm">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-500 opacity-5 rounded-full group-hover:scale-150 transition-transform duration-700" />
-          <p className="text-sm font-bold text-slate-900 mb-1">{t('common.needHelp')}</p>
-          <p className="text-[11px] text-slate-500 mb-4 leading-relaxed font-medium">{t('common.helpDescription')}</p>
+        <div className="bg-[#1F2937] rounded-[2.5rem] p-6 mb-6 relative overflow-hidden group border border-white/5 shadow-sm">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-white opacity-5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+          <p className="text-sm font-bold text-white mb-1">{t('common.needHelp')}</p>
+          <p className="text-[11px] text-gray-400 mb-4 leading-relaxed font-medium">{t('common.helpDescription')}</p>
           <Link to="/help">
-            <Button size="sm" variant="outline" className="w-full bg-white border-slate-200 text-slate-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all font-bold">
+            <Button size="sm" variant="outline" className="w-full bg-[#111827] border-white/10 text-white hover:bg-[#000000] hover:text-white hover:border-white/20 transition-all font-bold">
               {t('common.viewGuide')}
             </Button>
           </Link>
@@ -104,17 +130,22 @@ export const Sidebar: React.FC = () => {
         
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-6 py-4 w-full rounded-2xl text-[13px] font-bold text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all duration-300"
+          className="flex items-center gap-3 px-6 py-4 w-full rounded-2xl text-[13px] font-bold text-gray-500 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-300"
         >
           <LogOut className="w-4 h-4" />
           {t('common.logout')}
         </button>
       </div>
     </aside>
+    </>
   );
 };
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -175,14 +206,22 @@ export const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <header className="h-24 bg-white/60 backdrop-blur-[12px] border-b border-slate-100 px-10 flex items-center justify-between sticky top-0 z-10">
-      <div className="flex-1 max-w-sm relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-        <input 
-          type="text" 
-          placeholder={t('common.search')}
-          className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 transition-all duration-300 shadow-soft"
-        />
+    <header className="h-20 lg:h-24 bg-white/60 backdrop-blur-[12px] border-b border-slate-100 px-4 lg:px-10 flex items-center justify-between sticky top-0 z-10 transition-all">
+      <div className="flex items-center gap-4 flex-1">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 lg:hidden text-slate-500 hover:bg-slate-50 rounded-xl transition-all"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="hidden md:block lg:flex-1 lg:max-w-sm relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#000000] transition-colors" />
+          <input 
+            type="text" 
+            placeholder={t('common.search')}
+            className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-12 pr-4 text-sm focus:bg-white focus:border-[#374151]/20 focus:ring-4 focus:ring-black/5 transition-all duration-300 shadow-soft"
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -192,7 +231,7 @@ export const Navbar: React.FC = () => {
             onClick={() => { setShowNotifications(!showNotifications); setShowMessages(false); }}
             className={cn(
               "p-3 text-slate-500 hover:bg-slate-50 rounded-xl relative transition-all",
-              showNotifications && "bg-blue-50 text-blue-600"
+              showNotifications && "bg-gray-100 text-[#000000]"
             )}
           >
             <Bell className="w-5 h-5" />
@@ -205,12 +244,12 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-3 w-80 bg-white rounded-[2rem] shadow-premium border border-slate-100 overflow-hidden z-50"
+                className="fixed lg:absolute left-4 right-4 lg:left-auto lg:right-0 top-20 lg:top-auto lg:mt-3 lg:w-80 bg-white rounded-[2rem] shadow-premium border border-slate-100 overflow-hidden z-50 max-h-96 overflow-y-auto"
               >
                 <div className="p-5 border-b border-slate-50 flex items-center justify-between">
                   <h3 className="font-bold text-slate-900">{t('common.notifications')}</h3>
                   {unreadCount > 0 && (
-                    <button onClick={handleMarkAllAsRead} className="text-[10px] font-bold text-blue-600 uppercase tracking-wider hover:underline">{t('common.markAllRead')}</button>
+                    <button onClick={handleMarkAllAsRead} className="text-[10px] font-bold text-[#000000] uppercase tracking-wider hover:underline">{t('common.markAllRead')}</button>
                   )}
                 </div>
                 <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
@@ -218,7 +257,7 @@ export const Navbar: React.FC = () => {
                     notifications.map(notification => (
                       <div 
                         key={notification._id} 
-                        className={cn("p-5 cursor-pointer hover:bg-slate-50 transition-colors", !notification.isRead && "bg-blue-50/20")}
+                        className={cn("p-5 cursor-pointer hover:bg-slate-50 transition-colors", !notification.isRead && "bg-gray-50/50")}
                         onClick={() => { if (!notification.isRead) handleMarkAsRead(notification._id); }}
                       >
                         <p className="font-bold text-sm text-slate-900 mb-1">{notification.title}</p>
@@ -236,7 +275,7 @@ export const Navbar: React.FC = () => {
                   )}
                 </div>
                 <div className="p-4 bg-slate-50/50 text-center border-t border-slate-50">
-                  <button className="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors">{t('common.viewAll')}</button>
+                  <button className="text-xs font-bold text-slate-500 hover:text-[#000000] transition-colors">{t('common.viewAll')}</button>
                 </div>
               </motion.div>
             )}
@@ -248,7 +287,7 @@ export const Navbar: React.FC = () => {
             onClick={() => { setShowMessages(!showMessages); setShowNotifications(false); }}
             className={cn(
               "p-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all",
-              showMessages && "bg-blue-50 text-blue-600"
+              showMessages && "bg-gray-100 text-[#000000]"
             )}
           >
             <MessageSquare className="w-5 h-5" />
@@ -260,12 +299,12 @@ export const Navbar: React.FC = () => {
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-3 w-80 bg-white rounded-[2rem] shadow-premium border border-slate-100 overflow-hidden z-50"
+                className="fixed lg:absolute left-4 right-4 lg:left-auto lg:right-0 top-20 lg:top-auto lg:mt-3 lg:w-80 bg-white rounded-[2rem] shadow-premium border border-slate-100 overflow-hidden z-50 max-h-96 overflow-y-auto"
               >
                 <div className="p-5 border-b border-slate-50 flex items-center justify-between">
                   <h3 className="font-bold text-slate-900">{t('common.messages')}</h3>
                   <Link to="/messages" onClick={() => setShowMessages(false)}>
-                    <button className="text-[10px] font-bold text-blue-600 uppercase tracking-wider hover:underline">{t('common.messages')}</button>
+                    <button className="text-[10px] font-bold text-[#000000] uppercase tracking-wider hover:underline">{t('common.messages')}</button>
                   </Link>
                 </div>
                 <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
@@ -278,7 +317,7 @@ export const Navbar: React.FC = () => {
                 </div>
                 <div className="p-4 bg-slate-50/50 text-center border-t border-slate-50">
                   <Link to="/messages" onClick={() => setShowMessages(false)}>
-                    <button className="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors">{t('common.openMessageCenter')}</button>
+                    <button className="text-xs font-bold text-slate-500 hover:text-[#000000] transition-colors">{t('common.openMessageCenter')}</button>
                   </Link>
                 </div>
               </motion.div>
@@ -291,7 +330,7 @@ export const Navbar: React.FC = () => {
         <Link to="/profile" className="flex items-center gap-3 pl-3 hover:bg-slate-50 p-1.5 rounded-2xl transition-all border border-transparent hover:border-slate-100">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-slate-900">{user?.name}</p>
-            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{user?.role}</p>
+            <p className="text-[10px] font-black text-[#000000] uppercase tracking-widest">{user?.role}</p>
           </div>
           <img 
             src={getFullImageUrl(user?.avatar)} 

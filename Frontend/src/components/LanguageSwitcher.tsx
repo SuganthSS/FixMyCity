@@ -40,7 +40,7 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({ className }
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-all border border-transparent hover:border-zinc-100"
       >
-        <Languages className="w-4 h-4 text-[#2563EB]" />
+        <Languages className="w-4 h-4 text-[#000000]" />
         <span className="hidden sm:inline">{currentLanguage.name}</span>
         <ChevronDown className={cn("w-4 h-4 transition-transform", isOpen && "rotate-180")} />
       </button>
@@ -61,7 +61,7 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({ className }
                   className={cn(
                     "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
                     i18n.language === lang.code 
-                      ? "bg-blue-50 text-[#2563EB] font-semibold" 
+                      ? "bg-gray-100 text-[#000000] font-semibold" 
                       : "text-zinc-600 hover:bg-zinc-50"
                   )}
                 >

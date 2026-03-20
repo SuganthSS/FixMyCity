@@ -44,7 +44,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6 pt-24">
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6 pt-24">
       <AuthHeader />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -85,7 +85,7 @@ export const LoginPage: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
                 <Label htmlFor="password">{t('common.password')}</Label>
-                <button type="button" className="text-xs font-semibold text-[#2563EB] hover:underline">{t('common.forgotPassword')}</button>
+                <button type="button" className="text-xs font-semibold text-[#000000] hover:underline">{t('common.forgotPassword')}</button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -109,7 +109,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="flex items-center">
-              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-zinc-300 text-[#2563EB] focus:ring-[#2563EB]" />
+              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-zinc-300 text-[#000000] focus:ring-[#000000]" />
               <label htmlFor="remember" className="ml-2 text-sm text-zinc-600">{t('common.rememberMe')}</label>
             </div>
 
@@ -122,7 +122,7 @@ export const LoginPage: React.FC = () => {
 
         <p className="text-center mt-8 text-sm text-zinc-600">
           {t('common.noAccount')}{' '}
-          <Link to="/register" className="font-bold text-[#2563EB] hover:underline">{t('common.createAccount')}</Link>
+          <Link to="/register" className="font-bold text-[#000000] hover:underline">{t('common.createAccount')}</Link>
         </p>
       </motion.div>
     </div>
@@ -164,7 +164,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6 pt-24">
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6 pt-24">
       <AuthHeader />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -190,7 +190,7 @@ export const RegisterPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setRole(UserRole.CITIZEN)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.CITIZEN ? 'bg-white text-[#2563EB] shadow-sm' : 'text-zinc-500'
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.CITIZEN ? 'bg-white text-[#000000] shadow-sm' : 'text-zinc-500'
                   }`}
               >
                 {t('common.citizen')}
@@ -198,7 +198,7 @@ export const RegisterPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setRole(UserRole.STAFF)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.STAFF ? 'bg-white text-[#2563EB] shadow-sm' : 'text-zinc-500'
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.STAFF ? 'bg-white text-[#000000] shadow-sm' : 'text-zinc-500'
                   }`}
               >
                 {t('common.staff')}
@@ -291,7 +291,7 @@ export const RegisterPage: React.FC = () => {
 
         <p className="text-center mt-8 text-sm text-zinc-600">
           {t('common.alreadyAccount')}{' '}
-          <Link to="/login" className="font-bold text-[#2563EB] hover:underline">{t('common.login')}</Link>
+          <Link to="/login" className="font-bold text-[#000000] hover:underline">{t('common.login')}</Link>
         </p>
       </motion.div>
     </div>

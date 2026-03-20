@@ -38,15 +38,15 @@ export const CitizenDashboard: React.FC = () => {
   }));
 
   const stats = [
-    { label: t('common.totalReports'), value: myComplaints.length, icon: AlertCircle, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: t('common.pending'), value: myComplaints.filter(c => c.status !== ComplaintStatus.RESOLVED).length, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: t('common.totalReports'), value: myComplaints.length, icon: AlertCircle, color: 'text-[#000000]', bg: 'bg-gray-100' },
+    { label: t('common.pending'), value: myComplaints.filter(c => c.status !== ComplaintStatus.RESOLVED).length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: t('common.resolved'), value: myComplaints.filter(c => c.status === ComplaintStatus.RESOLVED).length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50' },
   ];
 
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F27D26]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#000000]"></div>
       </div>
     );
   }
@@ -145,7 +145,7 @@ export const CitizenDashboard: React.FC = () => {
             </button>
             <button className="w-full flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 transition-all text-left group">
               <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                <Calendar className="w-5 h-5 text-blue-500" />
+                <Calendar className="w-5 h-5 text-[#000000]" />
               </div>
               <div>
                 <p className="text-sm font-bold text-zinc-900">{t('dashboard.scheduledMaintenance')}</p>

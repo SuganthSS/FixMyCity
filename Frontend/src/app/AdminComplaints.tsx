@@ -141,7 +141,7 @@ export const AdminComplaintsPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <p className="text-[10px] font-mono text-zinc-400">#{complaint.id}</p>
                           {complaint.landmark && (
-                            <span className="text-[10px] text-[#2563EB] font-bold truncate">({complaint.landmark})</span>
+                            <span className="text-[10px] text-[#374151] font-bold truncate">({complaint.landmark})</span>
                           )}
                         </div>
                       </div>
@@ -160,7 +160,7 @@ export const AdminComplaintsPage: React.FC = () => {
                       className={cn(
                         "text-[10px] font-bold rounded-full px-2 py-0.5 border-none focus:ring-0 cursor-pointer uppercase tracking-wider",
                         complaint.priority === Priority.LOW ? "bg-zinc-100 text-zinc-600" :
-                        complaint.priority === Priority.MEDIUM ? "bg-blue-100 text-blue-600" :
+                        complaint.priority === Priority.MEDIUM ? "bg-gray-100 text-gray-600" :
                         complaint.priority === Priority.HIGH ? "bg-orange-100 text-orange-600" :
                         "bg-red-100 text-red-600"
                       )}

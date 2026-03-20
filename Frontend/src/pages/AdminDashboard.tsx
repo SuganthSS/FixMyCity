@@ -30,7 +30,7 @@ import {
   Cell
 } from 'recharts';
 
-const COLORS = ['#F27D26', '#3B82F6', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B'];
+const COLORS = ['#374151', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#A855F7'];
 
 export const AdminDashboard: React.FC = () => {
   const { complaints, loading } = useComplaints();
@@ -38,7 +38,7 @@ export const AdminDashboard: React.FC = () => {
   const stats = [
     { label: 'Total Complaints', value: complaints.length, icon: AlertCircle, color: 'text-zinc-600', bg: 'bg-zinc-100', trend: '+5.2%', isUp: true },
     { label: 'Pending Review', value: complaints.filter(c => c.status === ComplaintStatus.SUBMITTED).length, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50', trend: '-2.1%', isUp: false },
-    { label: 'In Progress', value: complaints.filter(c => c.status === ComplaintStatus.IN_PROGRESS).length, icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%', isUp: true },
+    { label: 'In Progress', value: complaints.filter(c => c.status === ComplaintStatus.IN_PROGRESS).length, icon: BarChart3, color: 'text-purple-500', bg: 'bg-purple-50', trend: '+12%', isUp: true },
     { label: 'Resolved', value: complaints.filter(c => c.status === ComplaintStatus.RESOLVED).length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', trend: '+8.4%', isUp: true },
   ];
 
@@ -57,7 +57,7 @@ export const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F27D26]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#000000]"></div>
       </div>
     );
   }
@@ -116,7 +116,7 @@ export const AdminDashboard: React.FC = () => {
                   cursor={{ fill: '#F8FAFC' }}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
-                <Bar dataKey="value" fill="#F27D26" radius={[6, 6, 0, 0]} barSize={40} />
+                <Bar dataKey="value" fill="#374151" radius={[6, 6, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -161,7 +161,7 @@ export const AdminDashboard: React.FC = () => {
       <Card className="p-0 overflow-hidden">
         <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
           <h3 className="text-lg font-bold text-zinc-900">High Priority Alerts</h3>
-          <Link to="/admin/complaints" className="text-sm font-bold text-[#F27D26] hover:underline">View All</Link>
+          <Link to="/admin/complaints" className="text-sm font-bold text-[#000000] hover:underline">View All</Link>
         </div>
         <div className="divide-y divide-zinc-100">
           {complaints.filter(c => c.priority === Priority.HIGH || c.priority === Priority.CRITICAL).map((complaint) => (

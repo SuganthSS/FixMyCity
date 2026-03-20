@@ -73,8 +73,8 @@ const getUserLocationIcon = () => {
   return L.divIcon({
     html: `
       <div class="relative flex items-center justify-center">
-        <div class="absolute w-10 h-10 rounded-full bg-blue-500 opacity-20 animate-pulse"></div>
-        <div class="relative w-5 h-5 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+        <div class="absolute w-10 h-10 rounded-full bg-[#000000] opacity-20 animate-pulse"></div>
+        <div class="relative w-5 h-5 bg-[#000000] rounded-full border-2 border-white shadow-lg flex items-center justify-center">
           <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
         </div>
       </div>
@@ -159,7 +159,7 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
         {/* User Location Marker */}
         {center && (
           <Marker position={center} icon={getUserLocationIcon()} zIndexOffset={1000}>
-            <Popup>Your current location</Popup>
+            <Popup>{t('mapView.userLocation')}</Popup>
           </Marker>
         )}
 
@@ -186,25 +186,25 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
 
                 <div className="space-y-2.5 pt-4 border-t border-slate-100">
                   <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                    <MapPin className="w-3.5 h-3.5 text-[#000000]" />
                     <span>{complaint.location || 'N/A'}</span>
                   </div>
                   
                   <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    <Clock className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Created {new Date(complaint.createdAt).toLocaleDateString()}</span>
+                    <Clock className="w-3.5 h-3.5 text-[#000000]" />
+                    <span>{t('mapView.createdOn', { date: new Date(complaint.createdAt).toLocaleDateString() })}</span>
                   </div>
 
                   <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    <AlertCircle className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Category: <span className="text-slate-600 ml-1">{complaint.category}</span></span>
+                    <AlertCircle className="w-3.5 h-3.5 text-[#000000]" />
+                    <span>{t('mapView.categoryLabel')} <span className="text-slate-600 ml-1">{complaint.category}</span></span>
                   </div>
                 </div>
                 
                 <div className="mt-5">
                    <Link to={`/complaints/${complaint.id}`} className="block">
-                      <button className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
-                        View Details
+                      <button className="w-full py-2.5 bg-[#000000] text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-[#1F2937] transition-colors shadow-lg shadow-black/10">
+                        {t('mapView.viewDetails')}
                       </button>
                    </Link>
                 </div>
@@ -217,8 +217,8 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
       {/* Floating Legend */}
       <div className="absolute bottom-6 right-6 z-[400] bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-premium border border-white/50 space-y-3">
         <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 px-1">
-          <Info className="w-3 h-3 text-blue-600" />
-          Status Legend
+          <Info className="w-3 h-3 text-[#000000]" />
+          {t('mapView.statusLegend')}
         </h5>
         <div className="grid grid-cols-1 gap-2">
           {Object.entries(statusColorMap).map(([status, color]) => (
