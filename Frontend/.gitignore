@@ -6,3 +6,19 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Temporary & Debug Files
+check_*
+debug_mongo.*
+list_*
+verify*
+migrate_*
+get_token.ts
+print_deps.ts
+trigger_*
+*_output.txt
+output.txt
+task.md
+implementation_plan.md
+walkthrough.md
+tmp/
