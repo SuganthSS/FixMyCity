@@ -6,10 +6,9 @@ import {
   Send,
   X,
   AlertCircle,
-  ChevronDown,
   Locate
 } from 'lucide-react';
-import { ComplaintCategory, Priority } from '../types';
+import { Priority } from '../types';
 import { Button, Input, Label, Card } from '../components/UI';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
@@ -93,7 +92,7 @@ export const ReportIssuePage: React.FC = () => {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<ComplaintCategory>(ComplaintCategory.ROAD_ISSUE);
+
   const [location, setLocation] = useState('');
   const [coords, setCoords] = useState<[number, number] | null>(null);
   const [image, setImage] = useState<string | null>(null);
@@ -137,12 +136,11 @@ export const ReportIssuePage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('Submitting report with state:', { title, description, category, location, coords, landmark, issueDate, recurringIssue });
+      console.log('Submitting report with state:', { title, description, location, coords, landmark, issueDate, recurringIssue });
       // Create new complaint object
       await addComplaint({
         title,
         description,
-        category,
         location,
         latitude: coords ? coords[0] : undefined,
         longitude: coords ? coords[1] : undefined,
@@ -185,25 +183,7 @@ export const ReportIssuePage: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="category">{t('report.category')}</Label>
-                <div className="relative">
-                  <select
-                    id="category"
-                    className="w-full h-10 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-black/10"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
-                  >
-                    {Object.values(ComplaintCategory).map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                </div>
-              </div>
 
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">

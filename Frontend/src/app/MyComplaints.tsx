@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Filter,
@@ -7,7 +7,8 @@ import {
   MapPin,
   Calendar,
   Clock,
-  MoreVertical
+  MoreVertical,
+  Ticket
 } from 'lucide-react';
 import { ComplaintStatus, ComplaintCategory } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
@@ -16,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useComplaints } from '../context/ComplaintContext';
 import { getFullImageUrl } from '../lib/utils';
+import { ticketsApi } from '../services/ticketsApi';
 
 export const MyComplaintsPage: React.FC = () => {
   const { user } = useAuth();
@@ -24,6 +26,30 @@ export const MyComplaintsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [tickets, setTickets] = useState<any[]>([]);
+
+  const fetchTickets = useCallback(async () => {
+    try {
+      const res = await ticketsApi.getMyTickets();
+      setTickets(res.data);
+    } catch(e) {
+      console.error('Failed to fetch tickets:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
+
+  const handleRaiseTicket = async (complaintId: string) => {
+    try {
+      await ticketsApi.raiseTicket(complaintId);
+      await fetchTickets();
+    } catch(e) {
+      console.error('Failed to raise ticket:', e);
+    }
+  };
 
   const myComplaints = complaints.filter(c => c.citizenId === user?.id);
 
@@ -91,7 +117,10 @@ export const MyComplaintsPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredComplaints.length > 0 ? (
-            filteredComplaints.map((complaint, i) => (
+            filteredComplaints.map((complaint, i) => {
+              const ticket = tickets.find(t => t.complaintId?._id === complaint.id || t.complaintId === complaint.id);
+
+              return (
               <motion.div
                 key={complaint.id}
                 layout
@@ -100,8 +129,8 @@ export const MyComplaintsPage: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Link to={`/complaints/${complaint.id}`}>
-                  <Card className="p-4 hover:border-[#374151]/30 hover:shadow-md transition-all group">
+                <Card className="p-4 hover:border-[#374151]/30 hover:shadow-md transition-all group flex flex-col">
+                  <Link to={`/complaints/${complaint.id}`} className="block flex-1 cursor-pointer">
                     <div className="flex flex-col md:flex-row gap-6 items-center">
                       <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden shrink-0">
                         <img
@@ -166,10 +195,40 @@ export const MyComplaintsPage: React.FC = () => {
                         <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[#000000] group-hover:translate-x-1 transition-all" />
                       </div>
                     </div>
-                  </Card>
-                </Link>
+                  </Link>
+
+                  <div className="mt-4 pt-4 border-t border-zinc-100 flex justify-end">
+                    {ticket ? (
+                      ticket.status === 'OPEN' ? (
+                        <span className="bg-amber-50 text-amber-700 border border-amber-200 text-xs px-3 py-1 rounded-full font-medium">
+                          Ticket Raised — Awaiting Staff ({ticket.ticketCode})
+                        </span>
+                      ) : ticket.status === 'ACCEPTED' ? (
+                        <span className="bg-green-50 text-green-700 border border-green-200 text-xs px-3 py-1 rounded-full font-medium">
+                          {ticket.ticketCode} — In Progress
+                        </span>
+                      ) : (
+                        <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full font-medium">
+                          {ticket.ticketCode} — Closed
+                        </span>
+                      )
+                    ) : (
+                      complaint.category ? (
+                        <button 
+                          onClick={(e) => { e.preventDefault(); handleRaiseTicket(complaint.id); }}
+                          className="bg-black text-white rounded-lg px-3 py-1.5 text-sm font-medium flex items-center hover:bg-zinc-800 transition-colors"
+                        >
+                          <Ticket className="w-4 h-4 mr-1.5" /> Raise Ticket
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">Department not assigned yet — ticket unavailable</span>
+                      )
+                    )}
+                  </div>
+                </Card>
               </motion.div>
-            ))
+              );
+            })
           ) : (
             <div className="text-center py-20 bg-zinc-50 rounded-3xl border-2 border-dashed border-zinc-200">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">

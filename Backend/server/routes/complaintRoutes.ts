@@ -7,7 +7,6 @@ import {
   getComplaintById,
   updateComplaintStatus,
   updateComplaintPriority,
-  updateComplaintDepartment,
   getPublicComplaints,
   toggleUpvote,
 } from '../controllers/complaintController.ts';
@@ -41,7 +40,8 @@ router.patch('/:id/upvote', protect, allowRoles('citizen'), toggleUpvote);
 
 // Staff and Admin routes
 router.patch('/:id/status', protect, allowRoles('staff', 'admin'), updateComplaintStatus);
-router.patch('/:id/department', protect, allowRoles('staff', 'admin'), updateComplaintDepartment);
+// DEPRECATED: department is now auto-set from category by the AI classifier
+// router.patch('/:id/department', protect, allowRoles('staff', 'admin'), updateComplaintDepartment);
 
 // Admin only routes
 router.patch('/:id/priority', protect, admin, updateComplaintPriority);

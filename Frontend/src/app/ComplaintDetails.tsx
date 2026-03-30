@@ -182,18 +182,20 @@ export const ComplaintDetailsPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="p-6 bg-gray-50 border-gray-200/50 text-slate-900 border">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                <MessageSquare className="w-5 h-5 text-[#000000]" />
+          {user?.role === UserRole.CITIZEN && (
+            <Card className="p-6 bg-gray-50 border-gray-200/50 text-slate-900 border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                  <MessageSquare className="w-5 h-5 text-[#000000]" />
+                </div>
+                <h3 className="text-lg font-bold">{t('complaintDetails.contactSupport')}</h3>
               </div>
-              <h3 className="text-lg font-bold">{t('complaintDetails.contactSupport')}</h3>
-            </div>
-            <p className="text-sm text-slate-600 font-medium mb-6">{t('complaintDetails.supportDesc')}</p>
-            <Link to="/support">
-              <Button className="w-full bg-[#000000] text-white hover:bg-[#1F2937]">{t('complaintDetails.startChat')}</Button>
-            </Link>
-          </Card>
+              <p className="text-sm text-slate-600 font-medium mb-6">{t('complaintDetails.supportDesc')}</p>
+              <Link to="/support">
+                <Button className="w-full bg-[#000000] text-white hover:bg-[#1F2937]">{t('complaintDetails.startChat')}</Button>
+              </Link>
+            </Card>
+          )}
         </div>
       </div>
     </div>

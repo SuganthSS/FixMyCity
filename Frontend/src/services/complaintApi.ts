@@ -1,8 +1,8 @@
 import api from './api';
 
 export const complaintApi = {
-    getComplaints: async () => {
-        const { data } = await api.get('/complaints');
+    getComplaints: async (search?: string) => {
+        const { data } = await api.get('/complaints', { params: { search } });
         return data;
     },
 

@@ -17,8 +17,13 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['citizen', 'staff', 'admin'],
+    enum: ['citizen', 'staff', 'admin', 'hod'],
     default: 'citizen',
+  },
+  department: {
+    type: String,
+    enum: ['Road Issue', 'Water Leak', 'Streetlight Issue', 'Garbage Issue', 'Drainage Issue'],
+    default: null,
   },
   isApproved: {
     type: Boolean,

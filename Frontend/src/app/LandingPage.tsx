@@ -16,7 +16,11 @@ import {
   HelpCircle,
   ArrowUpCircle,
   FileSearch,
-  XCircle
+  XCircle,
+  Crown,
+  Cpu,
+  ShieldCheck,
+  Bell
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Badge } from '../components/UI';
@@ -477,34 +481,64 @@ export const LandingPage: React.FC = () => {
               <p className="text-lg md:text-xl text-zinc-500 font-bold max-w-lg mx-auto md:mx-0">
                 {t('landing.howItWorksDesc', 'Transparent and efficient lifecycle for every reported grievance.')}
               </p>
+              <div className="flex flex-wrap gap-3 mt-6">
+                {[
+                  { icon: <Users className="w-3.5 h-3.5" />, label: 'Citizens', desc: 'Report & track issues' },
+                  { icon: <Crown className="w-3.5 h-3.5" />, label: 'HOD', desc: 'Assign & oversee tasks' },
+                  { icon: <Shield className="w-3.5 h-3.5" />, label: 'Staff', desc: 'Resolve & update' },
+                  { icon: <ShieldCheck className="w-3.5 h-3.5" />, label: 'Admin', desc: 'System & broadcast' }
+                ].map((role, i) => (
+                  <div key={i} className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-zinc-200 shadow-sm">
+                    <div className="w-6 h-6 bg-zinc-100 rounded-full flex items-center justify-center text-zinc-600">
+                      {role.icon}
+                    </div>
+                    <span className="text-[10px] font-black text-zinc-900 uppercase tracking-widest">{role.label}</span>
+                    <span className="text-[10px] text-zinc-400 font-bold">— {role.desc}</span>
+                  </div>
+                ))}
+              </div>
             </div>
             <Link to="/public-feed" className="w-full md:w-auto">
               <Button variant="outline" className="w-full h-14 px-10 border-zinc-200">{t('landing.viewLiveFeed', 'View Live Feed')}</Button>
             </Link>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
             {[
               {
                 icon: <Camera className="w-10 h-10" />,
-                title: t('landing.howItWorksSteps.report.title'),
-                desc: t('landing.howItWorksSteps.report.desc'),
+                title: 'Citizen Reports',
+                desc: 'Fill in issue details, upload a photo, and pin the exact location on the map.',
                 color: 'bg-gray-100 text-[#000000]',
                 badge: 'bg-[#000000]'
               },
               {
-                icon: <Search className="w-10 h-10" />,
-                title: t('landing.howItWorksSteps.track.title'),
-                desc: t('landing.howItWorksSteps.track.desc'),
-                color: 'bg-gray-100 text-[#374151]',
-                badge: 'bg-gray-500'
+                icon: <Cpu className="w-10 h-10" />,
+                title: 'AI Classifier',
+                desc: 'Our AI reads the report and instantly routes it to the correct department.',
+                color: 'bg-violet-50 text-violet-600',
+                badge: 'bg-violet-500'
+              },
+              {
+                icon: <Crown className="w-10 h-10" />,
+                title: 'HOD Assignment',
+                desc: 'Department head reviews context and assigns the best staff for the job.',
+                color: 'bg-amber-50 text-amber-600',
+                badge: 'bg-amber-500'
+              },
+              {
+                icon: <Shield className="w-10 h-10" />,
+                title: 'Staff Resolution',
+                desc: 'Staff works on the issue and communicates via our secure ticket system.',
+                color: 'bg-blue-50 text-blue-600',
+                badge: 'bg-blue-500'
               },
               {
                 icon: <CheckCircle2 className="w-10 h-10" />,
-                title: t('landing.howItWorksSteps.city.title'),
-                desc: t('landing.howItWorksSteps.city.desc'),
+                title: 'Citizen Update',
+                desc: 'Get notified on completion and close the ticket with your feedback.',
                 color: 'bg-emerald-50 text-emerald-600',
-                badge: 'bg-[#111827]'
+                badge: 'bg-emerald-500'
               }
             ].map((step, i) => (
               <motion.div
@@ -525,7 +559,9 @@ export const LandingPage: React.FC = () => {
                   <div className={cn('w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-inner', step.color)}>
                     {step.icon}
                   </div>
-                  <h3 className="text-2xl font-black text-zinc-900 mb-4 tracking-tight uppercase leading-tight min-h-[4rem] flex items-center">{step.title}</h3>
+                  <h3 className="text-xl md:text-2xl font-black text-zinc-900 mb-4 tracking-tight uppercase leading-tight min-h-[4rem] flex items-center break-words w-full">
+                    {step.title}
+                  </h3>
                   <p className="text-zinc-500 font-bold leading-relaxed text-base">{step.desc}</p>
                 </Card>
               </motion.div>
@@ -575,31 +611,43 @@ export const LandingPage: React.FC = () => {
               {t('landing.platformDesc', 'Supercharging civic governance with a suite of professional-grade tools.')}
             </motion.p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
+                icon: <Cpu className="w-8 h-8" />,
+                title: 'AI Classification',
+                desc: 'Advanced ML models analyze reports to ensure 100% accurate department routing.',
+                color: 'text-zinc-900'
+              },
+              {
+                icon: <MessageSquare className="w-8 h-8" />,
+                title: 'Secure Ticketing',
+                desc: 'A robust ticket system facilitates direct communication between citizens and staff.',
+                color: 'text-blue-600'
+              },
+              {
+                icon: <Crown className="w-8 h-8" />,
+                title: 'HOD Management',
+                desc: 'Department heads monitor all grievances and manage resource allocation efficiently.',
+                color: 'text-amber-500'
+              },
+              {
+                icon: <Bell className="w-8 h-8" />,
+                title: 'Admin Broadcasts',
+                desc: 'Send targeted announcements to citizens or maintain platform-wide compliance.',
+                color: 'text-purple-500'
+              },
+              {
                 icon: <BarChart3 className="w-8 h-8" />,
-                title: t('landing.features.ai.title'),
-                desc: t('landing.features.ai.desc'),
-                color: 'text-[#374151]'
-              },
-              {
-                icon: <Clock className="w-8 h-8" />,
-                title: t('landing.features.tracking.title'),
-                desc: t('landing.features.tracking.desc'),
-                color: 'text-[#000000]'
-              },
-              {
-                icon: <Shield className="w-8 h-8" />,
-                title: t('landing.features.admin.title'),
-                desc: t('landing.features.admin.desc'),
+                title: 'Workload Metrics',
+                desc: 'Real-time monitoring of staff workload and department resolution performance.',
                 color: 'text-emerald-500'
               },
               {
-                icon: <Users className="w-8 h-8" />,
-                title: t('landing.features.community.title'),
-                desc: t('landing.features.community.desc'),
-                color: 'text-purple-500'
+                icon: <MapPin className="w-8 h-8" />,
+                title: 'Map Visualization',
+                desc: 'Track complaint clusters and deployment status across the entire city grid.',
+                color: 'text-rose-500'
               }
             ].map((feature, i) => (
               <motion.div
@@ -638,10 +686,12 @@ export const LandingPage: React.FC = () => {
               </h2>
               <div className="space-y-6">
                 {[
-                  t('landing.workflow.point1', 'Report issues with photo and location'),
-                  t('landing.workflow.point2', 'Track status from submission to resolution'),
-                  t('landing.workflow.point3', 'Community upvoting for priority issues'),
-                  t('landing.workflow.point4', 'Real-time notifications on updates')
+                  'Submit issues with photos and precise GPS location',
+                  'AI Classifier instantly routes every report accurately',
+                  'HOD reviews context and assigns to qualified staff',
+                  'Resolve issues efficiently with dedicated ticket threads',
+                  'Real-time status updates from HOD and staff members',
+                  'Direct communication between citizens and department officials'
                 ].map((point, i) => (
                   <div key={i} className="flex items-center gap-4 group">
                     <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
@@ -665,13 +715,25 @@ export const LandingPage: React.FC = () => {
                     icon: <Camera className="w-5 h-5" />
                   },
                   { 
-                    step: t('landing.workflow.step2', 'Step 2'), 
+                    step: 'Step 2', 
+                    title: 'AI Classifies', 
+                    desc: 'Complaint routed to the correct department instantly',
+                    icon: <Cpu className="w-5 h-5" />
+                  },
+                  { 
+                    step: 'Step 3', 
+                    title: 'HOD Assigns', 
+                    desc: 'Department head reviews and assigns to staff',
+                    icon: <Crown className="w-5 h-5" />
+                  },
+                  { 
+                    step: 'Step 4', 
                     title: t('landing.workflow.step2Title', 'Staff Reviews'), 
                     desc: t('landing.workflow.step2Desc', 'Department assigned and assessed'),
                     icon: <Search className="w-5 h-5" />
                   },
                   { 
-                    step: t('landing.workflow.step3', 'Step 3'), 
+                    step: 'Step 5', 
                     title: t('landing.workflow.step3Title', 'Issue Resolved'), 
                     desc: t('landing.workflow.step3Desc', 'Citizen notified on completion'),
                     icon: <CheckCircle2 className="w-5 h-5" />
@@ -682,7 +744,7 @@ export const LandingPage: React.FC = () => {
                     initial={{ opacity: 0, x: 30 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: i * 0.2 }}
+                    transition={{ duration: 0.6, delay: i * 0.15 }}
                     className="flex gap-8 group"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-white shadow-lg border border-zinc-100 flex items-center justify-center shrink-0 group-hover:bg-[#000000] group-hover:text-white transition-all duration-500">
@@ -722,10 +784,10 @@ export const LandingPage: React.FC = () => {
               <div className="space-y-4">
                 {[
                   { q: t('landing.faq.q1', 'How do I report a civic issue?'), a: t('landing.faq.a1', "Simply sign in to your citizen account, click 'Report Issue', pin the location on the map, and upload a photo with details.") },
-                  { q: t('landing.faq.q2', 'How long does resolution take?'), a: t('landing.faq.a2', "Each department has specific SLAs. You'll receive real-time updates as the status changes from submitted to resolved.") },
-                  { q: t('landing.faq.q3', 'Is my personal information private?'), a: t('landing.faq.a3', "Yes. Your privacy is our priority. Personal details are only visible to authorized department staff handling your case.") },
-                  { q: t('landing.faq.q4', 'Can I track my complaint status?'), a: t('landing.faq.a4', "Absolutely. Every report gets a unique ID (e.g., #FMC-1042) that you can track in real-time on your dashboard.") },
-                  { q: t('landing.faq.q5', 'What areas does FixMyCity cover?'), a: t('landing.faq.a5', "Currently, we cover all major metropolitan zones and surrounding districts. We are expanding to more areas every month.") }
+                  { q: 'How are complaints assigned to the right department?', a: 'When you submit a complaint, our AI classifier reads your title and description and instantly routes it to the correct department — Road, Water, Streetlight, Garbage, or Drainage — so the right team is notified immediately.' },
+                  { q: 'What is a ticket and how do I use it?', a: 'A ticket is a dedicated communication thread created when a staff member accepts your complaint. It allows you to chat directly with the person fixing your issue and track progress in real-time.' },
+                  { q: 'Who is the Head of Department?', a: 'Each department has a dedicated HOD who oversees all incoming complaints, assigns them to staff members, and monitors the overall department resolution rate.' },
+                  { q: 'How does the admin send announcements?', a: 'The system administrator can dispatch targeted announcements (broadcasts) to the entire city or specific roles to communicate platform updates or emergency alerts.' }
                 ].map((faq, i) => (
                   <motion.div 
                     key={i}

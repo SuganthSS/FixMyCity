@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const complaintSchema = new mongoose.Schema({
+  complaintCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   title: {
     type: String,
     required: true,
@@ -35,6 +40,11 @@ const complaintSchema = new mongoose.Schema({
   },
   department: {
     type: String,
+  },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
   },
   location: {
     type: String,

@@ -20,6 +20,7 @@ const createComplaint = async (req: any, res: Response) => {
       issueDate,
       recurringIssue
     } = req.body;
+    const sanitizedCategory = category && category !== 'undefined' ? category : undefined;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || '';
 
     console.log('Submission Body:', req.body);
@@ -30,16 +31,29 @@ const createComplaint = async (req: any, res: Response) => {
     const parsedIssueDate = issueDate ? new Date(issueDate) : undefined;
 
     // ML Service Integration
-    const mlAnalysis = await analyzeComplaint(description, imageUrl);
+    const mlAnalysis = await analyzeComplaint(title, description, imageUrl);
+
+    // Generate complaintCode
+    const lastComplaint = await Complaint.findOne({ complaintCode: { $exists: true } }).sort({ createdAt: -1 });
+    let nextCodeNum = 1001;
+    if (lastComplaint && lastComplaint.complaintCode) {
+      const match = lastComplaint.complaintCode.match(/CMP-(\d+)/);
+      if (match) {
+        nextCodeNum = parseInt(match[1], 10) + 1;
+      }
+    }
+    const complaintCode = `CMP-${nextCodeNum}`;
 
     const complaint = await Complaint.create({
+      complaintCode,
       title,
       description,
       location,
       latitude: latitude ? Number(latitude) : undefined,
       longitude: longitude ? Number(longitude) : undefined,
       imageUrl,
-      category: category || mlAnalysis.category,
+      category: sanitizedCategory || mlAnalysis.category,
+      department: sanitizedCategory || mlAnalysis.category,
       priority: priority || mlAnalysis.priority || 'MEDIUM',
       landmark,
       issueDate: parsedIssueDate,
@@ -66,15 +80,29 @@ const createComplaint = async (req: any, res: Response) => {
 // @access  Private
 const getComplaints = async (req: any, res: Response) => {
   try {
-    let query = {};
+    let query: any = {};
     if (req.user.role === 'citizen') {
-      query = { citizenId: req.user._id };
+      query.citizenId = req.user._id;
     }
 
-    let complaints = await Complaint.find(query).populate('citizenId', 'name email');
+    if (req.query.search) {
+      query.title = { $regex: req.query.search, $options: 'i' };
+    }
 
-    // Privacy rules for STAFF
-    if (req.user.role === 'staff') {
+    if (req.query.complaintCode) {
+      query.complaintCode = { $regex: new RegExp(`^${req.query.complaintCode}$`, 'i') };
+    }
+
+    // Staff filter: only assigned complaints unless searching for messaging
+    if (req.user.role === 'staff' && !req.query.search && !req.query.complaintCode) {
+      query.assignedTo = req.user._id;
+    }
+
+    let complaints = await Complaint.find(query).select('+department').populate('citizenId', 'name email');
+    console.log(`DEBUG: Found ${complaints.length} complaints for query`, query);
+
+    // Privacy rules for STAFF - allow info if searching for messaging purposes
+    if (req.user.role === 'staff' && !req.query.search) {
       complaints = complaints.map((complaint: any) => {
         const c = complaint.toObject() as any;
         delete c.citizenId;
@@ -163,39 +191,7 @@ const updateComplaintStatus = async (req: any, res: Response) => {
 // @route   PATCH /api/complaints/:id/department
 // @access  Private/Staff/Admin
 const updateComplaintDepartment = async (req: any, res: Response) => {
-  try {
-    const { department } = req.body;
-    const complaint = await Complaint.findById(req.params.id);
-
-    if (complaint) {
-      complaint.department = department || complaint.department;
-
-      if (department) {
-        complaint.timeline.push({
-          status: complaint.status,
-          message: `Complaint assigned to department: ${department}`,
-        });
-      }
-
-      if (department) {
-        // Create notification for citizen
-        await Notification.create({
-          user: complaint.citizenId,
-          title: 'Department Assigned',
-          message: `Your complaint was assigned to the ${department} department`,
-          complaint: complaint._id
-        });
-      }
-
-      const updatedComplaint = await complaint.save();
-      res.json(updatedComplaint);
-    } else {
-      res.status(404).json({ message: 'Complaint not found' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
+  return res.status(410).json({ message: 'Department is now set automatically by the AI classifier. Manual override is disabled.' });
 };
 
 // @desc    Update complaint priority

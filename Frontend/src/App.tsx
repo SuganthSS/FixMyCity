@@ -17,13 +17,18 @@ import { ComplaintDetailsPage } from './app/ComplaintDetails';
 import { AdminDashboard } from './app/AdminDashboard';
 import { StaffDashboard } from './app/StaffDashboard';
 import { StaffMapPage } from './app/StaffMapPage';
+import { HODDashboard } from './app/HODDashboard';
+import { HODMessagesPage } from './app/HODMessagesPage';
 import { AdminComplaintsPage } from './app/AdminComplaints';
 import { AdminMapPage } from './app/AdminMapPage';
 import { AdminUsersPage } from './app/AdminUsersPage';
 import { AdminStaffPage } from './app/AdminStaffPage';
+import { AdminHODPage } from './app/AdminHODPage';
+import { AdminMessagesPage } from './app/AdminMessagesPage';
+import { StaffMessagesPage } from './app/StaffMessagesPage';
 import { ProfilePage } from './app/Profile';
 import { HelpPage } from './app/HelpPage';
-import { MessageCenter } from './app/MessageCenter';
+import { CitizenMessagesPage } from './app/CitizenMessagesPage';
 import { MapPage } from './app/MapPage';
 import { MaintenancePage } from './app/MaintenancePage';
 import { SupportPage } from './app/SupportPage';
@@ -38,6 +43,8 @@ const getDashboardRoute = (role?: UserRole) => {
       return '/admin/dashboard';
     case UserRole.STAFF:
       return '/staff/dashboard';
+    case UserRole.HOD:
+      return '/hod/dashboard';
     case UserRole.CITIZEN:
     default:
       return '/dashboard';
@@ -134,8 +141,8 @@ export default function App() {
           </ProtectedRoute>
         } />
         <Route path="/messages" element={
-          <ProtectedRoute>
-            <Layout><MessageCenter /></Layout>
+          <ProtectedRoute role={UserRole.CITIZEN}>
+            <Layout><CitizenMessagesPage /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/map" element={
@@ -175,6 +182,23 @@ export default function App() {
             <Layout><StaffMapPage /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/staff/messages" element={
+          <ProtectedRoute role={UserRole.STAFF}>
+            <Layout><StaffMessagesPage /></Layout>
+          </ProtectedRoute>
+        } />
+
+        {/* HOD Routes */}
+        <Route path="/hod/dashboard" element={
+          <ProtectedRoute role={UserRole.HOD}>
+            <Layout><HODDashboard /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/hod/messages" element={
+          <ProtectedRoute role={UserRole.HOD}>
+            <Layout><HODMessagesPage /></Layout>
+          </ProtectedRoute>
+        } />
 
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={
@@ -192,6 +216,11 @@ export default function App() {
             <Layout><AdminComplaintsPage /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/messages" element={
+          <ProtectedRoute role={UserRole.ADMIN}>
+            <Layout><AdminMessagesPage /></Layout>
+          </ProtectedRoute>
+        } />
         <Route path="/admin/analytics" element={
           <ProtectedRoute role={UserRole.ADMIN}>
             <Layout><AnalyticsPage /></Layout>
@@ -205,6 +234,11 @@ export default function App() {
         <Route path="/admin/staff" element={
           <ProtectedRoute role={UserRole.ADMIN}>
             <Layout><AdminStaffPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/hod" element={
+          <ProtectedRoute role={UserRole.ADMIN}>
+            <Layout><AdminHODPage /></Layout>
           </ProtectedRoute>
         } />
 

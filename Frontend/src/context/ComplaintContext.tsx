@@ -27,6 +27,7 @@ const mapComplaint = (c: any): Complaint => ({
   citizenId: c.citizenId?._id || c.citizenId || '',
   citizenName: c.citizenName || '',
   department: c.department as Department | undefined,
+  assignedTo: c.assignedTo?._id || c.assignedTo || undefined,
   location: c.location || '',
   latitude: c.latitude,
   longitude: c.longitude,

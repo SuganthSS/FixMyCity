@@ -76,9 +76,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (name: string, email: string, password: string, role: UserRole) => {
     try {
-      // Prevent admin registration from frontend
-      if (role === UserRole.ADMIN) {
-        return { success: false, message: 'Admin accounts cannot be registered here.' };
+      // Prevent admin and HOD registration from frontend
+      if (role === UserRole.ADMIN || role === UserRole.HOD) {
+        return { success: false, message: 'This account type cannot be registered here.' };
       }
 
       const data = await authApi.register(name, email, password, role);

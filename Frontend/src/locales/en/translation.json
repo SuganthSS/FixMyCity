@@ -402,7 +402,7 @@
   },
   "staffDashboard": {
     "portal": "Staff Portal",
-    "portalDesc": "Manage and resolve civic issues assigned to your department with real-time tracking.",
+    "portalDesc": "Manage and resolve civic issues assigned to you by your Head of Department.",
     "exportQueue": "Export Queue",
     "viewMap": "View Map",
     "searchPlaceholder": "Search...",
@@ -410,7 +410,7 @@
     "all": "All",
     "unassigned": "Unassigned",
     "details": "Details",
-    "noComplaints": "No complaints found matching your filters.",
+    "noComplaints": "No complaints assigned to you yet. New issues in your department will be assigned by your Head of Department.",
     "clearFilters": "Clear all filters",
     "communitySupport": "Community Support",
     "urgency": "Urgency",

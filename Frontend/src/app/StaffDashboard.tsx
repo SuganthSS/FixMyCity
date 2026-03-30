@@ -136,8 +136,7 @@ export const StaffDashboard: React.FC = () => {
                   <th className="px-6 py-5 font-black text-slate-400 text-[11px] uppercase tracking-widest">{t('staffDashboard.tableHeaders.categoryPriority')}</th>
                   <th className="px-6 py-5 font-black text-slate-400 text-[11px] uppercase tracking-widest">{t('staffDashboard.tableHeaders.updateStatus')}</th>
                   <th className="px-6 py-5 font-black text-slate-400 text-[11px] uppercase tracking-widest text-center">{t('staffDashboard.tableHeaders.urgency')}</th>
-                  <th className="px-6 py-5 font-black text-slate-400 text-[11px] uppercase tracking-widest">{t('staffDashboard.tableHeaders.department')}</th>
-                  <th className="px-8 py-5 font-black text-slate-400 text-[11px] uppercase tracking-widest text-right">{t('staffDashboard.tableHeaders.action')}</th>
+                  <th className="px-6 py-5 font-black text-slate-400 text-[11px] uppercase tracking-widest text-right">{t('staffDashboard.tableHeaders.action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -149,7 +148,12 @@ export const StaffDashboard: React.FC = () => {
                           <img src={getFullImageUrl(complaint.imageUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-900 text-base mb-1 group-hover:text-[#374151] transition-colors line-clamp-1">{complaint.title}</h4>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-bold text-slate-900 text-base group-hover:text-[#374151] transition-colors line-clamp-1">{complaint.title}</h4>
+                            <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded shrink-0">
+                              #{complaint.complaintCode || complaint.id.substring(0, 8)}
+                            </span>
+                          </div>
                           <div className="flex items-center gap-3 text-[11px] text-slate-400 font-bold uppercase tracking-tight">
                             <span className="flex items-center gap-1.5 min-w-0">
                               <MapPin className="w-3 h-3 text-rose-400" /> 
@@ -190,18 +194,6 @@ export const StaffDashboard: React.FC = () => {
                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{t('staffDashboard.communitySupport')}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-6">
-                      <select 
-                        className="bg-white border border-slate-100 shadow-soft text-xs font-bold text-slate-900 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-black/10 cursor-pointer outline-none w-full"
-                        value={complaint.department || ''}
-                        onChange={(e) => updateComplaintDepartment(complaint.id, e.target.value as Department)}
-                      >
-                        <option value="">{t('staffDashboard.unassigned')}</option>
-                        {Object.values(Department).map(dept => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                      </select>
-                    </td>
                     <td className="px-8 py-6 text-right">
                       <Button variant="outline" className="rounded-2xl border-slate-200 px-6 font-black text-xs uppercase group-hover:bg-[#000000] group-hover:text-white group-hover:border-[#000000] transition-all" onClick={() => navigate(`/complaints/${complaint.id}`)}>
                         {t('staffDashboard.details')}
@@ -211,7 +203,7 @@ export const StaffDashboard: React.FC = () => {
                 ))}
                 {filteredComplaints.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-24 text-center">
+                    <td colSpan={5} className="py-24 text-center">
                        <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4 text-slate-300">
                           <Search className="w-8 h-8" />
                        </div>

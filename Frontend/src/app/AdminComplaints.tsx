@@ -9,29 +9,22 @@ import {
   Building2,
   AlertCircle
 } from 'lucide-react';
-import { ComplaintStatus, Department, Priority } from '../types';
+import { ComplaintStatus, Department, Priority, ComplaintCategory } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
 import { motion } from 'motion/react';
 import { cn, getFullImageUrl } from '../lib/utils';
 import { useComplaints } from '../context/ComplaintContext';
+import { useAuth } from '../context/AuthContext';
 
 export const AdminComplaintsPage: React.FC = () => {
-  const { complaints, updateComplaintStatus, updateComplaintDepartment, updateComplaintPriority } = useComplaints();
+  const { complaints } = useComplaints();
+  const { users } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [priorityFilter, setPriorityFilter] = useState<string>('ALL');
 
-  const handleStatusChange = (id: string, newStatus: ComplaintStatus) => {
-    updateComplaintStatus(id, newStatus);
-  };
 
-  const handleDepartmentChange = (id: string, newDept: Department) => {
-    updateComplaintDepartment(id, newDept);
-  };
-
-  const handlePriorityChange = (id: string, newPriority: Priority) => {
-    updateComplaintPriority(id, newPriority);
-  };
 
   const handleExportCSV = () => {
     const headers = ['ID', 'Title', 'Citizen', 'Priority', 'Status', 'Department', 'Created At'];
@@ -41,7 +34,7 @@ export const AdminComplaintsPage: React.FC = () => {
       c.citizenName,
       c.priority,
       c.status,
-      c.department || 'Unassigned',
+      c.category || 'Unclassified',
       new Date(c.createdAt).toLocaleDateString()
     ]);
     
@@ -63,16 +56,17 @@ export const AdminComplaintsPage: React.FC = () => {
     
     const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
     const matchesPriority = priorityFilter === 'ALL' || c.priority === priorityFilter;
+    const matchesCategory = categoryFilter === 'ALL' || c.category === categoryFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority;
-  }).sort((a, b) => (b.upvotes?.length || 0) - (a.upvotes?.length || 0));
+    return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Complaint Management</h1>
-          <p className="text-zinc-500 mt-1">Review, assign, and update the status of city-wide reports.</p>
+          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Complaint Oversight</h1>
+          <p className="text-zinc-500 mt-1">Review and monitor status of city-wide reports at a high level.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>Export CSV</Button>
@@ -103,6 +97,16 @@ export const AdminComplaintsPage: React.FC = () => {
           </select>
           <select 
             className="h-11 px-4 rounded-xl bg-white border border-zinc-200 text-sm font-medium focus:ring-2 focus:ring-[#F27D26]/20 outline-none"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="ALL">All Departments</option>
+            {Object.values(ComplaintCategory).map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <select 
+            className="h-11 px-4 rounded-xl bg-white border border-zinc-200 text-sm font-medium focus:ring-2 focus:ring-[#F27D26]/20 outline-none"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
           >
@@ -120,16 +124,18 @@ export const AdminComplaintsPage: React.FC = () => {
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100">
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Complaint</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Citizen</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Priority</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Upvotes</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Department</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-center">Submitted</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-center">Category (Dept)</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-center">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-center">Priority</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-center">Assigned Staff</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {filtered.map((complaint) => (
+              {filtered.map((complaint) => {
+                const assignedStaff = users.find(u => u.id === complaint.assignedTo);
+                
+                return (
                 <tr key={complaint.id} className="hover:bg-zinc-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
@@ -147,81 +153,29 @@ export const AdminComplaintsPage: React.FC = () => {
                       </div>
                     </div>
                   </td>
+                  <td className="px-6 py-4 text-center">
+                    <p className="text-sm text-zinc-600">{new Date(complaint.createdAt).toLocaleDateString()}</p>
+                  </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
-                        <User className="w-3 h-3 text-zinc-500" />
-                      </div>
-                      <span className="text-sm text-zinc-600">{complaint.citizenName}</span>
+                    <div className="flex items-center justify-center gap-2">
+                      <Building2 className="w-4 h-4 text-zinc-400" />
+                      <span className="text-xs font-medium text-zinc-600">
+                        {complaint.category || 'Unclassified'}
+                      </span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <select 
-                      className={cn(
-                        "text-[10px] font-bold rounded-full px-2 py-0.5 border-none focus:ring-0 cursor-pointer uppercase tracking-wider",
-                        complaint.priority === Priority.LOW ? "bg-zinc-100 text-zinc-600" :
-                        complaint.priority === Priority.MEDIUM ? "bg-gray-100 text-gray-600" :
-                        complaint.priority === Priority.HIGH ? "bg-orange-100 text-orange-600" :
-                        "bg-red-100 text-red-600"
-                      )}
-                      value={complaint.priority}
-                      onChange={(e) => handlePriorityChange(complaint.id, e.target.value as Priority)}
-                    >
-                      {Object.values(Priority).map(p => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-6 py-4">
-                    <select 
-                      className={cn(
-                        "text-xs font-bold rounded-lg px-2 py-1 border-none focus:ring-2 focus:ring-offset-1 transition-all",
-                        complaint.status === ComplaintStatus.RESOLVED ? "bg-green-100 text-green-700" : 
-                        complaint.status === ComplaintStatus.SUBMITTED ? "bg-yellow-100 text-yellow-700" :
-                        "bg-zinc-100 text-zinc-700"
-                      )}
-                      value={complaint.status}
-                      onChange={(e) => handleStatusChange(complaint.id, e.target.value as ComplaintStatus)}
-                    >
-                      {Object.values(ComplaintStatus).map(s => (
-                        <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                      ))}
-                    </select>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className="text-sm font-bold text-zinc-900">
-                      {complaint.upvotes?.length || 0}
-                    </span>
+                    <Badge variant={complaint.status}>{complaint.status.replace('_', ' ')}</Badge>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-zinc-400" />
-                      <select 
-                        className="text-xs font-medium bg-transparent border-none focus:ring-0 p-0 text-zinc-600"
-                        value={complaint.department || ''}
-                        onChange={(e) => handleDepartmentChange(complaint.id, e.target.value as Department)}
-                      >
-                        <option value="">Unassigned</option>
-                        {Object.values(Department).map(d => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <td className="px-6 py-4 text-center">
+                    <Badge variant={complaint.priority}>{complaint.priority}</Badge>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                      <Link to={`/complaints/${complaint.id}`}>
-                        <Button variant="outline" size="sm" className="h-8 px-3">
-                          Details
-                        </Button>
-                      </Link>
-                    </div>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-sm text-zinc-600">{assignedStaff ? assignedStaff.name : 'Unassigned'}</span>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -64,9 +64,9 @@ const loginUser = async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if staff is approved
-    if (user.role === 'staff' && !user.isApproved) {
-      res.status(403).json({ message: 'Your staff account is pending admin approval.' });
+    // Check if staff or HOD is approved
+    if ((user.role === 'staff' || user.role === 'hod') && !user.isApproved) {
+      res.status(403).json({ message: 'Your account is pending admin approval.' });
       return;
     }
 
@@ -75,6 +75,7 @@ const loginUser = async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      department: user.department || null,
       token: generateToken(user._id.toString()),
     });
   } else {
@@ -94,6 +95,7 @@ const getUserProfile = async (req: any, res: Response) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      department: user.department || null,
     });
   } else {
     res.status(404).json({ message: 'User not found' });

@@ -14,8 +14,9 @@ import {
   Bell,
   MessageSquare,
   Clock,
-  Map,
-  Shield
+  Shield,
+  ShieldCheck,
+  Map
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
@@ -25,6 +26,7 @@ import { Button, Card } from './UI';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { motion, AnimatePresence } from 'motion/react';
 import { getNotifications, markAsRead, markAllAsRead } from '../services/notificationApi';
+import { getUnreadCount } from '../services/messagesApi';
 import { Notification } from '../types';
 
 import { Logo } from './Logo';
@@ -45,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/report', icon: PlusCircle, label: t('common.reportIssue') },
     { to: '/public-feed', icon: Users, label: t('common.publicFeed') },
     { to: '/my-complaints', icon: ClipboardList, label: t('common.myComplaints') },
+    { to: '/messages', icon: MessageSquare, label: t('common.messages') },
     { to: '/profile', icon: User, label: t('common.profile') },
   ];
 
@@ -52,7 +55,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/admin/dashboard', icon: LayoutDashboard, label: t('common.adminDashboard') },
     { to: '/admin/complaints', icon: AlertCircle, label: t('common.complaintsManagement') },
     { to: '/admin/citizens', icon: Users, label: t('common.citizens') },
+    { to: '/admin/hod', icon: ShieldCheck, label: 'HOD Management' },
     { to: '/admin/staff', icon: Shield, label: t('common.staffManagement') },
+    { to: '/admin/messages', icon: MessageSquare, label: t('common.messages') },
     { to: '/admin/map', icon: Map, label: t('common.mapView') },
     { to: '/admin/analytics', icon: BarChart3, label: t('common.analytics') },
     { to: '/profile', icon: User, label: t('common.profile') },
@@ -62,12 +67,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/staff/dashboard', icon: LayoutDashboard, label: t('common.staffDashboard') },
     { to: '/staff/map', icon: Map, label: t('common.mapView') },
     { to: '/profile', icon: User, label: t('common.profile') },
-    { to: '/messages', icon: MessageSquare, label: t('common.messages') },
+    { to: '/staff/messages', icon: MessageSquare, label: t('common.messages') },
+  ];
+
+  const hodLinks = [
+    { to: '/hod/dashboard', icon: LayoutDashboard, label: 'HOD Dashboard' },
+    { to: '/hod/messages', icon: MessageSquare, label: 'Messages' },
+    { to: '/profile', icon: User, label: t('common.profile') },
   ];
 
   const links = user?.role === UserRole.ADMIN ? adminLinks : 
                 user?.role === UserRole.STAFF ? staffLinks : 
+                user?.role === UserRole.HOD ? hodLinks :
                 citizenLinks;
+
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    if (user?.role === UserRole.ADMIN || user?.role === UserRole.STAFF || user?.role === UserRole.HOD) {
+      getUnreadCount().then(setUnreadMessages).catch(console.error);
+      const interval = setInterval(() => {
+        getUnreadCount().then(setUnreadMessages).catch(console.error);
+      }, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   return (
     <>
@@ -109,7 +133,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           >
             {({ isActive }) => (
               <>
-                <link.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "text-gray-500")} />
+                <div className="relative flex items-center justify-center">
+                  <link.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-white" : "text-gray-500")} />
+                  {(link.to === '/admin/messages' || link.to === '/messages' || link.to === '/hod/messages') && unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-[#111827] shadow-sm transform scale-[0.6] origin-top-right" />
+                  )}
+                </div>
                 {link.label}
               </>
             )}
@@ -117,16 +146,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         ))}
       </nav>
       <div className="p-6 mt-auto">
-        <div className="bg-[#1F2937] rounded-[2.5rem] p-6 mb-6 relative overflow-hidden group border border-white/5 shadow-sm">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-white opacity-5 rounded-full group-hover:scale-150 transition-transform duration-700" />
-          <p className="text-sm font-bold text-white mb-1">{t('common.needHelp')}</p>
-          <p className="text-[11px] text-gray-400 mb-4 leading-relaxed font-medium">{t('common.helpDescription')}</p>
-          <Link to="/help">
-            <Button size="sm" variant="outline" className="w-full bg-[#111827] border-white/10 text-white hover:bg-[#000000] hover:text-white hover:border-white/20 transition-all font-bold">
-              {t('common.viewGuide')}
-            </Button>
-          </Link>
-        </div>
+        {user?.role === UserRole.CITIZEN && (
+          <div className="bg-[#1F2937] rounded-[2.5rem] p-6 mb-6 relative overflow-hidden group border border-white/5 shadow-sm">
+            <div className="absolute -right-4 -top-4 w-20 h-20 bg-white opacity-5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+            <p className="text-sm font-bold text-white mb-1">{t('common.needHelp')}</p>
+            <p className="text-[11px] text-gray-400 mb-4 leading-relaxed font-medium">{t('common.helpDescription')}</p>
+            <Link to="/help">
+              <Button size="sm" variant="outline" className="w-full bg-[#111827] border-white/10 text-white hover:bg-[#000000] hover:text-white hover:border-white/20 transition-all font-bold">
+                {t('common.viewGuide')}
+              </Button>
+            </Link>
+          </div>
+        )}
         
         <button
           onClick={logout}

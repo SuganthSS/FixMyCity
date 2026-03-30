@@ -2,6 +2,7 @@ export enum UserRole {
   CITIZEN = 'citizen',
   STAFF = 'staff',
   ADMIN = 'admin',
+  HOD = 'hod',
 }
 
 export enum ComplaintStatus {
@@ -81,6 +82,7 @@ export interface Complaint {
   citizenId: string;
   citizenName: string;
   department?: Department;
+  assignedTo?: string;
   location: string;
   latitude?: number;
   longitude?: number;

@@ -93,4 +93,44 @@ const getUsers = async (req: Request, res: Response) => {
   }
 };
 
-export { approveStaff, banUser, unbanUser, getUsers };
+// @desc    Assign department to staff
+// @route   PATCH /api/admin/assign-department/:userId
+// @access  Private/Admin
+const assignDepartment = async (req: Request, res: Response) => {
+  try {
+    const { department } = req.body;
+    const user = await User.findById(req.params.userId);
+
+    if (user) {
+      if (user.role !== 'staff' && user.role !== 'hod') {
+        res.status(400).json({ message: 'Can only assign departments to staff or HOD members' });
+        return;
+      }
+      
+      const validDepartments = ['Road Issue', 'Water Leak', 'Streetlight Issue', 'Garbage Issue', 'Drainage Issue'];
+      if (!validDepartments.includes(department)) {
+         res.status(400).json({ message: 'Invalid department' });
+         return;
+      }
+
+      user.department = department;
+      const updatedUser = await user.save();
+      
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        department: updatedUser.department,
+        isApproved: updatedUser.isApproved,
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export { approveStaff, banUser, unbanUser, getUsers, assignDepartment };

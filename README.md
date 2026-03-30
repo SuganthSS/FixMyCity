@@ -7,14 +7,14 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript)
 ![Vercel](https://img.shields.io/badge/Deployed-Vercel-000000?style=for-the-badge&logo=vercel)
 
-> A full-stack civic issue reporting platform that empowers citizens to report public infrastructure problems and enables municipal staff to manage and resolve them efficiently.
+> A full-stack civic issue reporting platform that empowers citizens to report public infrastructure problems, enables municipal staff to manage and resolve them efficiently, and gives department heads full oversight of their teams.
 
 ---
 
 ## 🌐 Live Demo
 
 - **Frontend:** [https://fix-my-city-nu.vercel.app](https://fix-my-city-nu.vercel.app)
-- **Backend API:** [https://fixmycity-backend-rlbx.onrender.com](https://fixmycity-backend-rlbx.onrender.com)(API endpoint — not a user-facing URL)
+- **Backend API:** [https://fixmycity-backend-rlbx.onrender.com](https://fixmycity-backend-rlbx.onrender.com) *(API endpoint — not a user-facing URL)*
 
 ---
 
@@ -22,28 +22,74 @@
 
 ### 👤 Citizen Features
 - Register and log in securely
-- Report civic issues with title, description, category, image, location (map pin), landmark, issue date, and recurring issue flag
-- Track complaint status in real time
-- View complaint timeline with status history
+- Report civic issues with title, description, image, location (map pin), landmark, issue date, and recurring issue flag
+- Department is auto-assigned by the AI classifier — no manual category selection needed
+- Track complaint status in real time with full timeline history
 - Upvote community complaints to increase priority automatically
 - Browse public feed sorted by proximity and upvotes
-- Receive in-app notifications on complaint updates
+- Receive in-app notifications on complaint updates and HOD assignments
+- Raise support tickets on complaints to request staff assistance
+- View ticket status (OPEN / ACCEPTED / CLOSED) per complaint, grouped by complaint
+- Close a ticket once the issue is resolved
+- Message staff anonymously through ticket-based conversations
+- View targeted admin broadcast announcements with unread badge indicator
 - Multi-language support (English, Tamil, Hindi, Malayalam, Telugu)
 
 ### 🛠️ Staff Features
-- View and manage all assigned complaints
-- Update complaint status and department
-- View complaints on an interactive map with color-coded markers
-- See upvote counts to prioritize high-demand issues
+- View and manage only complaints assigned to them by their HOD
+- Update complaint status on assigned complaints
+- View assigned complaints on an interactive map
+- See complaint codes (CMP-XXXX) on all complaint cards for easy reference
+- Ticket Inbox — view open and accepted support tickets raised by citizens in their department
+- Accept tickets (first-accept locks the ticket to that staff member)
+- Communicate with citizens anonymously through ticket conversations
+- Message HOD linked to a specific complaint code (CMP-XXXX)
+- Receive targeted broadcast announcements and direct messages from HOD
+- Unread message badge on sidebar
+
+### 🏢 Head of Department (HOD) Features
+- View all complaints for their assigned department
+- Assign complaints to specific staff members within their department
+- Monitor staff workload and complaint distribution in real time
+- See complaint codes (CMP-XXXX) on all complaint cards
+- Message specific staff members with optional complaint reference linking
+- Message admin linked to a specific complaint code
+- View full inbox with threaded conversation history from admin and staff
+- Receive targeted broadcast announcements from admin
+- One HOD per department (Road Issue, Water Leak, Streetlight Issue, Garbage Issue, Drainage Issue)
+- HOD accounts created via seed script — no public registration
 
 ### 🔧 Admin Features
 - Full system oversight and analytics dashboard
 - Approve or ban staff accounts
+- Assign departments to staff members
+- Manage and view HOD accounts per department (dedicated HOD Management page)
 - Manage citizen accounts
-- View complaints by category with charts
+- View complaints by category with read-only department-wise oversight
 - Status distribution visualization
-- Staff performance analytics
 - Map view of all active complaints
+- Send targeted broadcast announcements — choose audience: Citizens Only, Staff Only, HODs Only, or Everyone
+- Message specific HOD by searching complaint code (CMP-XXXX)
+- View and reply to HOD messages in a threaded inbox
+
+### 🤖 AI Complaint Classifier
+- Automatically classifies complaint department based on title and description using keyword matching
+- Runs on every new complaint submission — no manual category selection by citizen needed
+- Sets both the category and department fields simultaneously on creation
+- Instantly routes the complaint to the correct HOD queue
+- Supports all 5 departments: Road Issue, Water Leak, Streetlight Issue, Garbage Issue, Drainage Issue
+- Defaults to Road Issue if no keywords match
+
+### 🎫 Ticket System
+- Citizens raise support tickets on their complaints
+- Ticket codes auto-generated in format TKT-0001 (auto-increment)
+- All dept staff see open tickets — first to accept locks it
+- Citizen identity fully hidden from staff — identified by ticket code only
+- Staff identified as "Support Staff" to citizens — full anonymity both ways
+- Full chat interface within each ticket conversation
+- Citizens can close tickets once resolved — input disabled with closed notice
+- Staff can view accepted and open tickets — tickets persist until explicitly closed
+- Tickets grouped by complaint in citizen view for easy navigation
 
 ### 🗺️ Map Features
 - Interactive Leaflet map restricted to India
@@ -51,11 +97,31 @@
 - Status legend (Submitted, Under Review, In Progress, Resolved, Rejected)
 - Marker click info panel with complaint details
 - Location selection for new reports
+- Staff map shows only their assigned complaints
 
 ### 🔔 Notification System
 - Automatic in-app notifications on complaint status updates
+- Notification when HOD assigns a complaint to a staff member
 - Unread count badge on notification bell
 - Mark individual or all notifications as read
+
+### 💬 Messaging System
+
+Strict communication hierarchy enforced across all roles:
+
+| From | To | Channel |
+|---|---|---|
+| Citizen | Staff | Ticket conversations only |
+| Staff | Citizen | Direct message or ticket reply |
+| Staff | HOD | CMP code linked message |
+| HOD | Staff | Direct message with optional complaint link |
+| HOD | Admin | CMP code linked message |
+| Admin | HOD | CMP code linked message |
+| Admin | Citizens / Staff / HODs | Targeted broadcast by audience |
+
+- Unread message count badge on sidebar for all roles
+- Thread-based conversation tracking with full history view
+- HOD and Staff receive targeted announcements in dedicated Announcements tab
 
 ### 🌍 Multi-Language Support
 - Language switcher on all public and citizen pages
@@ -118,49 +184,78 @@ Project/
 ├── Frontend/
 │   ├── public/
 │   ├── src/
-│   │   ├── app/                  # Page components
+│   │   ├── app/                        # Page components
 │   │   │   ├── CitizenDashboard.tsx
 │   │   │   ├── StaffDashboard.tsx
 │   │   │   ├── AdminDashboard.tsx
+│   │   │   ├── HODDashboard.tsx
 │   │   │   ├── ReportIssue.tsx
 │   │   │   ├── MyComplaints.tsx
 │   │   │   ├── PublicFeed.tsx
 │   │   │   ├── LandingPage.tsx
+│   │   │   ├── AdminMessagesPage.tsx
+│   │   │   ├── StaffMessagesPage.tsx
+│   │   │   ├── CitizenMessagesPage.tsx
+│   │   │   ├── HODMessagesPage.tsx
+│   │   │   ├── AdminStaffPage.tsx
+│   │   │   ├── AdminHODPage.tsx
+│   │   │   ├── AdminUsersPage.tsx
+│   │   │   ├── AdminComplaints.tsx
+│   │   │   ├── AnalyticsPage.tsx
 │   │   │   └── ...
-│   │   ├── components/           # Reusable components
+│   │   ├── components/                 # Reusable components
 │   │   │   ├── Layout.tsx
 │   │   │   ├── ComplaintsMapView.tsx
 │   │   │   ├── LanguageSwitcher.tsx
 │   │   │   └── ...
-│   │   ├── context/              # React context
+│   │   ├── context/                    # React context
 │   │   │   ├── AuthContext.tsx
 │   │   │   └── ComplaintContext.tsx
-│   │   ├── services/             # API service functions
-│   │   ├── locales/              # Translation files
+│   │   ├── services/                   # API service functions
+│   │   │   ├── api.ts
+│   │   │   ├── messagesApi.ts
+│   │   │   ├── ticketsApi.ts
+│   │   │   └── hodApi.ts
+│   │   ├── locales/                    # Translation files (5 languages)
 │   │   │   ├── en/
 │   │   │   ├── ta/
 │   │   │   ├── hi/
 │   │   │   ├── ml/
 │   │   │   └── te/
-│   │   ├── types.ts              # TypeScript interfaces
-│   │   ├── App.tsx               # Routes
+│   │   ├── types.ts
+│   │   ├── App.tsx
 │   │   └── main.tsx
 │   └── package.json
 │
 ├── Backend/
 │   └── server/
-│       ├── config/               # DB connection
-│       ├── controllers/          # Route handlers
+│       ├── config/                     # DB connection
+│       ├── controllers/                # Route handlers
 │       │   ├── authController.ts
 │       │   ├── complaintController.ts
-│       │   └── notificationController.ts
-│       ├── middleware/           # Auth middleware
-│       ├── models/               # Mongoose schemas
+│       │   ├── notificationController.ts
+│       │   ├── adminController.ts
+│       │   ├── hodController.ts
+│       │   └── ticketController.ts
+│       ├── middleware/                 # Auth middleware
+│       ├── models/                     # Mongoose schemas
 │       │   ├── User.ts
 │       │   ├── Complaint.ts
-│       │   └── Notification.ts
-│       ├── routes/               # API routes
-│       └── server.ts             # Entry point
+│       │   ├── Notification.ts
+│       │   ├── Message.ts
+│       │   └── Ticket.ts
+│       ├── routes/                     # API routes
+│       │   ├── authRoutes.ts
+│       │   ├── complaintRoutes.ts
+│       │   ├── adminRoutes.ts
+│       │   ├── notificationRoutes.ts
+│       │   ├── hodRoutes.ts
+│       │   ├── messages.ts
+│       │   └── ticketRoutes.ts
+│       ├── scripts/
+│       │   ├── migrateComplaintCodes.ts
+│       │   └── seedHOD.ts
+│       └── server.ts
 │
 └── README.md
 ```
@@ -179,7 +274,7 @@ Project/
 
 #### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/fixmycity.git
+git clone https://github.com/SuganthSS/fixmycity.git
 cd fixmycity
 ```
 
@@ -202,7 +297,13 @@ Start the backend server:
 npm run dev
 ```
 
-#### 3. Frontend Setup
+#### 3. Seed HOD Accounts
+Run this once after the backend starts to create the 5 HOD accounts:
+```bash
+npx tsx server/scripts/seedHOD.ts
+```
+
+#### 4. Frontend Setup
 ```bash
 cd Frontend
 npm install
@@ -219,6 +320,28 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:3000`
+
+---
+
+## 🔐 Default Accounts
+
+### Admin
+| Field | Value |
+|---|---|
+| Email | admin@example.com |
+| Password | admin123 |
+| Role | Admin |
+
+### Head of Department (HOD)
+| Department | Email | Password |
+|---|---|---|
+| Road Issue | hod.road@fixmycity.com | hod123 |
+| Water Leak | hod.water@fixmycity.com | hod123 |
+| Streetlight Issue | hod.streetlight@fixmycity.com | hod123 |
+| Garbage Issue | hod.garbage@fixmycity.com | hod123 |
+| Drainage Issue | hod.drainage@fixmycity.com | hod123 |
+
+> ⚠️ Change all default passwords immediately after first login in a production environment.
 
 ---
 
@@ -251,13 +374,21 @@ The app will be available at `http://localhost:3000`
 ### Complaints
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/complaints` | Get all complaints (staff/admin) |
+| GET | `/api/complaints` | Get complaints (staff sees assigned only, admin/hod see all) |
 | GET | `/api/complaints/public` | Get public complaints feed |
-| POST | `/api/complaints` | Create new complaint |
+| POST | `/api/complaints` | Create new complaint (AI classifier runs automatically) |
 | PATCH | `/api/complaints/:id/status` | Update complaint status |
-| PATCH | `/api/complaints/:id/department` | Assign department |
 | PATCH | `/api/complaints/:id/priority` | Update priority |
 | PATCH | `/api/complaints/:id/upvote` | Toggle upvote on complaint |
+
+### HOD
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/hod/complaints` | Get all complaints for HOD's department |
+| PATCH | `/api/hod/complaints/:id/assign` | Assign complaint to a staff member |
+| GET | `/api/hod/staff` | Get all staff in HOD's department |
+| GET | `/api/hod/staff/workload` | Get staff workload counts |
+| GET | `/api/hod/stats` | Get department complaint stats |
 
 ### Admin
 | Method | Endpoint | Description |
@@ -266,6 +397,28 @@ The app will be available at `http://localhost:3000`
 | PATCH | `/api/admin/approve-staff/:id` | Approve staff account |
 | PATCH | `/api/admin/ban-user/:id` | Ban a user |
 | PATCH | `/api/admin/unban-user/:id` | Unban a user |
+| PATCH | `/api/admin/assign-department/:userId` | Assign department to staff |
+
+### Messages
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/messages` | Send a message |
+| GET | `/api/messages/inbox` | Get inbox (role-based and audience-filtered) |
+| GET | `/api/messages/sent` | Get sent messages |
+| GET | `/api/messages/thread/:threadId` | Get full message thread |
+| PATCH | `/api/messages/:id/read` | Mark message as read |
+| GET | `/api/messages/unread-count` | Get unread message count |
+| GET | `/api/messages/find-hod` | Find HOD by department (any authenticated user) |
+
+### Tickets
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/tickets` | Citizen raises a support ticket |
+| GET | `/api/tickets/my` | Get citizen's own tickets |
+| GET | `/api/tickets/department` | Get open and accepted tickets for staff's department |
+| PATCH | `/api/tickets/:id/accept` | Staff accepts a ticket |
+| PATCH | `/api/tickets/:id/close` | Citizen closes a ticket |
+| GET | `/api/tickets/conversation/:ticketId` | Get ticket conversation thread |
 
 ### Notifications
 | Method | Endpoint | Description |
@@ -278,21 +431,31 @@ The app will be available at `http://localhost:3000`
 
 ## 👥 Roles and Permissions
 
-| Feature | Citizen | Staff | Admin |
-|---|:---:|:---:|:---:|
-| Report issues | ✅ | ❌ | ❌ |
-| View own complaints | ✅ | ❌ | ❌ |
-| View public feed | ✅ | ❌ | ❌ |
-| Upvote complaints | ✅ | ❌ | ❌ |
-| Receive notifications | ✅ | ❌ | ❌ |
-| View all complaints | ❌ | ✅ | ✅ |
-| Update complaint status | ❌ | ✅ | ✅ |
-| Assign departments | ❌ | ✅ | ✅ |
-| View map view | ❌ | ✅ | ✅ |
-| View reporter identity | ❌ | ❌ | ✅ |
-| Approve staff accounts | ❌ | ❌ | ✅ |
-| Ban/unban users | ❌ | ❌ | ✅ |
-| View analytics | ❌ | ❌ | ✅ |
+| Feature | Citizen | Staff | HOD | Admin |
+|---|:---:|:---:|:---:|:---:|
+| Report issues | ✅ | ❌ | ❌ | ❌ |
+| AI auto-classifies department | ✅ | ❌ | ❌ | ❌ |
+| View own complaints | ✅ | ❌ | ❌ | ❌ |
+| View public feed | ✅ | ❌ | ❌ | ❌ |
+| Upvote complaints | ✅ | ❌ | ❌ | ❌ |
+| Raise and close support tickets | ✅ | ❌ | ❌ | ❌ |
+| Receive notifications | ✅ | ✅ | ✅ | ❌ |
+| Message staff via ticket | ✅ | ❌ | ❌ | ❌ |
+| View assigned complaints only | ❌ | ✅ | ❌ | ❌ |
+| Update complaint status | ❌ | ✅ | ❌ | ❌ |
+| Accept support tickets | ❌ | ✅ | ❌ | ❌ |
+| Message HOD (CMP linked) | ❌ | ✅ | ❌ | ❌ |
+| View dept complaints | ❌ | ❌ | ✅ | ❌ |
+| Assign complaints to staff | ❌ | ❌ | ✅ | ❌ |
+| Monitor staff workload | ❌ | ❌ | ✅ | ❌ |
+| Message staff with complaint link | ❌ | ❌ | ✅ | ❌ |
+| Message admin (CMP linked) | ❌ | ❌ | ✅ | ❌ |
+| View all complaints (read-only) | ❌ | ❌ | ❌ | ✅ |
+| Approve/ban users | ❌ | ❌ | ❌ | ✅ |
+| Assign staff departments | ❌ | ❌ | ❌ | ✅ |
+| Targeted broadcast announcements | ❌ | ❌ | ❌ | ✅ |
+| Message HOD (CMP linked) | ❌ | ❌ | ❌ | ✅ |
+| View analytics | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
@@ -300,14 +463,33 @@ The app will be available at `http://localhost:3000`
 
 ### User
 ```
-name, email, password, role, isApproved, isBanned, createdAt
+name, email, password, role (citizen/staff/hod/admin),
+department, isApproved, isBanned, createdAt
 ```
 
 ### Complaint
 ```
 title, description, category, status, priority, department,
+complaintCode (CMP-1001), assignedTo (staff ref),
 location, latitude, longitude, imageUrl, landmark, issueDate,
-recurringIssue, upvotes[], createdBy, timeline[], createdAt
+recurringIssue, upvotes[], citizenId, citizenName,
+timeline[], createdAt, updatedAt
+```
+
+### Ticket
+```
+ticketCode (TKT-0001), complaintId, citizenId,
+department, status (OPEN/ACCEPTED/CLOSED),
+acceptedBy (staff ref), createdAt
+```
+
+### Message
+```
+sender, senderRole (citizen/staff/hod/admin),
+recipientType (broadcast/staff/citizen/admin/hod),
+recipient, complaintRef, content,
+isRead, isReadBy[], thread,
+targetAudience (citizens/staff/hod/all), createdAt
 ```
 
 ### Notification
@@ -320,13 +502,15 @@ user, title, message, isRead, complaint, createdAt
 ## 🔮 Future Roadmap
 
 - [ ] Complaint heatmap on map view
-- [ ] Staff performance analytics
+- [ ] Staff performance analytics per HOD
 - [ ] Public transparency dashboard
 - [ ] Email notifications
 - [ ] Mobile app (React Native)
-- [ ] Offline complaint capture
+- [ ] Offline complaint capture (PWA)
 - [ ] Government department API integration
 - [ ] AI-powered image issue detection
+- [ ] HOD analytics dashboard
+- [ ] Citizen satisfaction rating after complaint resolution
 
 ---
 

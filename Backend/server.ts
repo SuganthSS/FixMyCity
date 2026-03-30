@@ -6,6 +6,9 @@ import authRoutes from './server/routes/authRoutes.ts';
 import complaintRoutes from './server/routes/complaintRoutes.ts';
 import adminRoutes from './server/routes/adminRoutes.ts';
 import notificationRoutes from './server/routes/notificationRoutes.ts';
+import messageRoutes from './server/routes/messages.ts';
+import ticketRoutes from './server/routes/ticketRoutes.ts';
+import hodRoutes from './server/routes/hodRoutes.ts';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -47,6 +50,9 @@ async function startServer() {
   app.use('/api/complaints', complaintRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/messages', messageRoutes);
+  app.use('/api/tickets', ticketRoutes);
+  app.use('/api/hod', hodRoutes);
 
   // Health check
   app.get('/api/health', (req, res) => {
