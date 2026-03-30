@@ -297,13 +297,7 @@ Start the backend server:
 npm run dev
 ```
 
-#### 3. Seed HOD Accounts
-Run this once after the backend starts to create the 5 HOD accounts:
-```bash
-npx tsx server/scripts/seedHOD.ts
-```
-
-#### 4. Frontend Setup
+#### 3. Frontend Setup
 ```bash
 cd Frontend
 npm install
@@ -320,28 +314,6 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:3000`
-
----
-
-## 🔐 Default Accounts
-
-### Admin
-| Field | Value |
-|---|---|
-| Email | admin@example.com |
-| Password | admin123 |
-| Role | Admin |
-
-### Head of Department (HOD)
-| Department | Email | Password |
-|---|---|---|
-| Road Issue | hod.road@fixmycity.com | hod123 |
-| Water Leak | hod.water@fixmycity.com | hod123 |
-| Streetlight Issue | hod.streetlight@fixmycity.com | hod123 |
-| Garbage Issue | hod.garbage@fixmycity.com | hod123 |
-| Drainage Issue | hod.drainage@fixmycity.com | hod123 |
-
-> ⚠️ Change all default passwords immediately after first login in a production environment.
 
 ---
 
