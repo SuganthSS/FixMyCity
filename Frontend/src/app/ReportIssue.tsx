@@ -36,7 +36,8 @@ const SelectionIcon = L.divIcon({
   iconAnchor: [16, 32]
 });
 
-const INDIA_BOUNDS: L.LatLngBoundsExpression = [[5.5, 66.0], [38.5, 99.0]];
+const CHENNAI_BOUNDS: [[number, number], [number, number]] = [[12.7, 79.8], [13.4, 80.7]];
+const CHENNAI_CENTER: [number, number] = [13.0827, 80.2707];
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
@@ -48,12 +49,12 @@ const LocationMarker = ({ position, setPosition, setLocation }: {
   const map = useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
-      const bounds = L.latLngBounds(INDIA_BOUNDS);
+      const bounds = L.latLngBounds(CHENNAI_BOUNDS[0], CHENNAI_BOUNDS[1]);
       if (bounds.contains(e.latlng)) {
         setPosition([lat, lng]);
         setLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
       } else {
-        alert("Please select a location within India.");
+        alert("Please select a location within Chennai city limits.");
       }
     },
   });
@@ -117,13 +118,13 @@ export const ReportIssuePage: React.FC = () => {
       navigator.geolocation.getCurrentPosition((pos) => {
         const { latitude, longitude } = pos.coords;
         const latlng = L.latLng(latitude, longitude);
-        const bounds = L.latLngBounds(INDIA_BOUNDS);
+        const bounds = L.latLngBounds(CHENNAI_BOUNDS[0], CHENNAI_BOUNDS[1]);
         
         if (bounds.contains(latlng)) {
           setCoords([latitude, longitude]);
           setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
         } else {
-          alert(t('report.mapHint'));
+          alert("Your location is outside Chennai. Please manually select a location within Chennai city limits.");
         }
       });
     }
@@ -273,11 +274,11 @@ export const ReportIssuePage: React.FC = () => {
                   <div className="w-10 h-10 border-4 border-[#000000] border-t-transparent rounded-full animate-spin"></div>
                 </div>
                 <MapContainer 
-                  bounds={INDIA_BOUNDS}
-                  zoom={5} 
-                  minZoom={5}
+                  center={CHENNAI_CENTER}
+                  zoom={12} 
+                  minZoom={10}
                   maxZoom={18}
-                  maxBounds={INDIA_BOUNDS}
+                  maxBounds={CHENNAI_BOUNDS}
                   maxBoundsViscosity={1.0}
                   scrollWheelZoom={false} 
                   style={{ height: '100%', width: '100%' }}
@@ -287,7 +288,7 @@ export const ReportIssuePage: React.FC = () => {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                     noWrap={true}
-                    bounds={INDIA_BOUNDS}
+                    bounds={CHENNAI_BOUNDS}
                   />
                   <LocationMarker position={coords} setPosition={setCoords} setLocation={setLocation} />
                   <RecenterMap position={coords} />

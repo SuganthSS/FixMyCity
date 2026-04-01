@@ -72,6 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const hodLinks = [
     { to: '/hod/dashboard', icon: LayoutDashboard, label: 'HOD Dashboard' },
+    { to: '/hod/map', icon: Map, label: t('common.mapView') },
     { to: '/hod/messages', icon: MessageSquare, label: 'Messages' },
     { to: '/profile', icon: User, label: t('common.profile') },
   ];

@@ -142,6 +142,32 @@
     "enable": "ప్రారంభించు"
   },
   "landing": {
+    "platformFeatures": {
+      "aiClassification": {
+        "title": "AI Classification",
+        "desc": "Advanced ML models analyze reports to ensure 100% accurate department routing."
+      },
+      "secureTicketing": {
+        "title": "Secure Ticketing",
+        "desc": "A robust ticket system facilitates direct communication between citizens and staff."
+      },
+      "hodManagement": {
+        "title": "HOD Management",
+        "desc": "Department heads monitor all grievances and manage resource allocation efficiently."
+      },
+      "adminBroadcasts": {
+        "title": "Admin Broadcasts",
+        "desc": "Send targeted announcements to citizens or maintain platform-wide compliance."
+      },
+      "workloadMetrics": {
+        "title": "Workload Metrics",
+        "desc": "Real-time monitoring of staff workload and department resolution performance."
+      },
+      "mapVisualization": {
+        "title": "Map Visualization",
+        "desc": "Track complaint clusters and deployment status across the entire city grid."
+      }
+    },
     "heroTitle": "FixMyCity – స్మార్ట్ పౌర ప్లాట్‌ఫారమ్",
     "heroDesc": "సమస్యలను నివేదించండి, నగరాన్ని శుభ్రంగా ఉంచండి.",
     "howItWorksSteps": {
@@ -156,6 +182,26 @@
       "city": {
         "title": "చర్య",
         "desc": "అధికారులు పరిష్కరిస్తారు."
+      },
+      "citizenReports": {
+        "title": "Citizen Reports",
+        "desc": "Fill in issue details, upload a photo, and pin the exact location on the map."
+      },
+      "aiClassifier": {
+        "title": "AI Classifier",
+        "desc": "Our AI reads the report and instantly routes it to the correct department."
+      },
+      "hodAssignment": {
+        "title": "HOD Assignment",
+        "desc": "Department head reviews context and assigns the best staff for the job."
+      },
+      "staffResolution": {
+        "title": "Staff Resolution",
+        "desc": "Staff works on the issue and communicates via our secure ticket system."
+      },
+      "citizenUpdate": {
+        "title": "Citizen Update",
+        "desc": "Get notified on completion and close the ticket with your feedback."
       }
     },
     "features": {
@@ -175,6 +221,12 @@
         "title": "కమ్యూనిటీ ఫీడ్",
         "desc": "మీ పరిసరాల్లో ధృవీకరించబడిన సమస్యలను చూడండి, వాటి అప్వోట్ చేయండి మరియు సమాచారంతో ఉండండి."
       }
+    },
+    "roles": {
+      "citizen": { "label": "Citizen", "desc": "Report & track issues" },
+      "hod": { "label": "HOD", "desc": "Assign & oversee tasks" },
+      "staff": { "label": "Staff", "desc": "Resolve & update" },
+      "admin": { "label": "Admin", "desc": "System & broadcast" }
     },
     "undefined": {},
     "mockup": {
@@ -232,7 +284,15 @@
       "q4": "నేను నా ఫిర్యాదు స్థితిని ట్రాక్ చేయగలనా?",
       "a4": "ఖచ్చితంగా. ప్రతి నివేదికకు ఒక ప్రత్యేక ID (ఉదా: #FMC-1042) వస్తుంది, దాన్ని మీరు మీ డాష్‌బోర్డ్‌లో నిజ సమయంలో ట్రాక్ చేయవచ్చు.",
       "q5": "FixMyCity ఏయే ప్రాంతాలను కవర్ చేస్తుంది?",
-      "a5": "ప్రస్తుతం, మేము అన్ని ప్రధాన మెట్రోపాలిటన్ జోన్‌లు మరియు పరిసర జిల్లాలను కవర్ చేస్తున్నాము. మేము ప్రతి నెలా మరిన్ని ప్రాంతాలకు విస్తరిస్తున్నాము."
+      "a5": "ప్రస్తుతం, మేము అన్ని ప్రధాన మెట్రోపాలిటన్ జోన్‌లు మరియు పరిసర జిల్లాలను కవర్ చేస్తున్నాము. మేము ప్రతి నెలా మరిన్ని ప్రాంతాలకు విస్తరిస్తున్నాము.",
+      "q6": "How are complaints assigned to the right department?",
+      "a6": "When you submit a complaint, our AI classifier reads your title and description and instantly routes it to the correct department — Road, Water, Streetlight, Garbage, or Drainage — so the right team is notified immediately.",
+      "q7": "What is a ticket and how do I use it?",
+      "a7": "A ticket is a dedicated communication thread created when a staff member accepts your complaint. It allows you to chat directly with the person fixing your issue and track progress in real-time.",
+      "q8": "Who is the Head of Department?",
+      "a8": "Each department has a dedicated HOD who oversees all incoming complaints, assigns them to staff members, and monitors the overall department resolution rate.",
+      "q9": "How does the admin send announcements?",
+      "a9": "The system administrator can dispatch targeted announcements (broadcasts) to the entire city or specific roles to communicate platform updates or emergency alerts."
     },
     "cta": {
       "title1": "నివేదించడం ప్రారంభించండి",
@@ -434,5 +494,28 @@
     "categoryLabel": "వర్గం",
     "viewDetails": "వివరాలను చూడండి",
     "statusLegend": "స్థితి రంగులు"
+  },
+  "citizenMessages": {
+    "title": "Message Center",
+    "subtitle": "View announcements and communicate with city staff regarding your tickets.",
+    "announcementsTab": "Announcements",
+    "myTicketsTab": "My Tickets",
+    "closeTicket": "Close Ticket",
+    "ticketClosed": "This ticket has been closed.",
+    "myFiledTickets": "My Filed Tickets",
+    "complaintId": "Complaint ID: {{code}}",
+    "noAnnouncements": "No announcements yet.",
+    "noTickets": "You have not raised any tickets yet",
+    "raised": "Raised {{date}}",
+    "loadingTickets": "Loading tickets...",
+    "openConversation": "Open Conversation",
+    "awaitingStaff": "Awaiting Staff",
+    "closed": "Closed",
+    "backToTickets": "Back to My Tickets",
+    "noStaffMessages": "No messages from staff yet.",
+    "sendReply": "Send Reply",
+    "replyPlaceholder": "Type your reply to staff...",
+    "supportStaff": "Support Staff",
+    "new": "New"
   }
 }

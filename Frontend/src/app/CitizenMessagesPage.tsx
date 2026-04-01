@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { ticketsApi } from '../services/ticketsApi';
 
 export function CitizenMessagesPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   
   const safeFormat = (dateStr: any, formatStr: string) => {
@@ -131,8 +132,8 @@ export function CitizenMessagesPage() {
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-[#000000]">Message Center</h1>
-        <p className="text-gray-500 mt-2">View announcements and communicate with city staff regarding your tickets.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[#000000]">{t('citizenMessages.title')}</h1>
+        <p className="text-gray-500 mt-2">{t('citizenMessages.subtitle')}</p>
       </div>
 
       <div className="flex space-x-8 border-b border-gray-200 mb-8">
@@ -142,7 +143,7 @@ export function CitizenMessagesPage() {
             activeTab === 'announcements' ? 'text-[#000000]' : 'text-gray-500 hover:text-gray-800'
           }`}
         >
-          Announcements
+          {t('citizenMessages.announcementsTab')}
           {activeTab === 'announcements' && (
             <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#000000] rounded-t" />
           )}
@@ -153,7 +154,7 @@ export function CitizenMessagesPage() {
             activeTab === 'tickets' ? 'text-[#000000]' : 'text-gray-500 hover:text-gray-800'
           }`}
         >
-          My Tickets
+          {t('citizenMessages.myTicketsTab')}
           {activeTab === 'tickets' && (
             <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#000000] rounded-t" />
           )}
@@ -165,7 +166,7 @@ export function CitizenMessagesPage() {
           {broadcasts.length === 0 ? (
              <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                <Bell className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-               <p className="text-gray-500 font-medium">No announcements yet.</p>
+               <p className="text-gray-500 font-medium">{t('citizenMessages.noAnnouncements')}</p>
              </div>
           ) : (
             broadcasts.map((msg) => {
@@ -182,7 +183,7 @@ export function CitizenMessagesPage() {
                     </span>
                     {isUnread && (
                       <span className="bg-[#000000] text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
-                        New
+                        {t('citizenMessages.new')}
                       </span>
                     )}
                   </div>
@@ -202,15 +203,15 @@ export function CitizenMessagesPage() {
             // View A: Ticket List
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
               <h2 className="text-lg font-bold text-[#000000] mb-6 flex items-center gap-2">
-                My Filed Tickets
+                {t('citizenMessages.myFiledTickets')}
               </h2>
               {isLoadingTickets ? (
                 <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                  <p className="text-gray-500">Loading tickets...</p>
+                  <p className="text-gray-500">{t('citizenMessages.loadingTickets')}</p>
                 </div>
               ) : tickets.length === 0 ? (
                 <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                  <p className="text-gray-500 font-medium">You have not raised any tickets yet</p>
+                  <p className="text-gray-500 font-medium">{t('citizenMessages.noTickets')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-6">
@@ -230,7 +231,7 @@ export function CitizenMessagesPage() {
                       <div key={compId} className="bg-gray-50 rounded-xl border border-gray-200 p-4 shadow-sm">
                         <div className="mb-4 pb-3 border-b border-gray-200">
                           <h3 className="text-lg font-bold text-[#000000] break-words">{compTitle}</h3>
-                          <div className="text-xs font-mono font-medium text-gray-500 mt-1 uppercase tracking-wider">Complaint ID: {compCode}</div>
+                          <div className="text-xs font-mono font-medium text-gray-500 mt-1 uppercase tracking-wider">{t('citizenMessages.complaintId', { code: compCode })}</div>
                         </div>
                         <div className="grid grid-cols-1 gap-3">
                           {groupTickets.map((ticket: any) => (
@@ -241,15 +242,15 @@ export function CitizenMessagesPage() {
                                     {ticket.ticketCode}
                                   </span>
                                   {ticket.status === 'OPEN' ? (
-                                    <span className="bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full">OPEN</span>
+                                    <span className="bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full">{t('common.submitted')}</span>
                                   ) : ticket.status === 'ACCEPTED' ? (
-                                    <span className="bg-green-50 text-green-700 border border-green-200 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full">ACCEPTED</span>
+                                    <span className="bg-green-50 text-green-700 border border-green-200 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full">{t('common.assigned')}</span>
                                   ) : (
-                                    <span className="bg-gray-100 text-gray-500 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full">CLOSED</span>
+                                    <span className="bg-gray-100 text-gray-500 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full">{t('citizenMessages.closed')}</span>
                                   )}
                                 </div>
                                 <p className="text-xs text-gray-500 font-medium whitespace-nowrap">
-                                  Raised {safeFormat(ticket.createdAt, 'MMM dd, yyyy')}
+                                  {t('citizenMessages.raised', { date: safeFormat(ticket.createdAt, 'MMM dd, yyyy') })}
                                 </p>
                               </div>
                               <div className="shrink-0 flex items-center">
@@ -258,12 +259,12 @@ export function CitizenMessagesPage() {
                                     onClick={() => handleOpenTicketConversation(ticket._id)}
                                     className="bg-[#000000] text-white rounded-lg hover:bg-gray-800 text-sm px-4 py-2"
                                   >
-                                    Open Conversation
+                                    {t('citizenMessages.openConversation')}
                                   </Button>
                                 ) : ticket.status === 'OPEN' ? (
-                                  <span className="text-gray-400 font-medium text-sm">Awaiting Staff</span>
+                                  <span className="text-gray-400 font-medium text-sm">{t('citizenMessages.awaitingStaff')}</span>
                                 ) : (
-                                  <span className="text-gray-400 font-medium text-sm">Closed</span>
+                                  <span className="text-gray-400 font-medium text-sm">{t('citizenMessages.closed')}</span>
                                 )}
                               </div>
                             </div>
@@ -286,10 +287,10 @@ export function CitizenMessagesPage() {
                       {activeTicket.ticketCode}
                     </span>
                     {activeTicket.status === 'CLOSED' ? (
-                      <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider bg-gray-200 px-2 py-0.5 rounded">CLOSED</span>
+                      <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider bg-gray-200 px-2 py-0.5 rounded">{t('citizenMessages.closed')}</span>
                     ) : (
                       <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider bg-gray-200 px-2 py-0.5 rounded">
-                        {activeTicket.status === 'OPEN' ? 'OPEN' : 'IN PROGRESS'}
+                        {activeTicket.status === 'OPEN' ? t('common.submitted') : t('common.inProgress')}
                       </span>
                     )}
                   </div>
@@ -302,7 +303,7 @@ export function CitizenMessagesPage() {
                       onClick={handleCloseTicket}
                       className="text-sm border-rose-200 text-rose-600 hover:bg-rose-50 font-medium"
                     >
-                      Close Ticket
+                      {t('citizenMessages.closeTicket')}
                     </Button>
                   )}
                   <Button 
@@ -310,7 +311,7 @@ export function CitizenMessagesPage() {
                     onClick={() => { setActiveTicket(null); loadMyTickets(); }}
                     className="text-sm border-gray-300 hover:bg-gray-100 text-black font-medium"
                   >
-                    Back to My Tickets
+                    {t('citizenMessages.backToTickets')}
                   </Button>
                 </div>
               </div>
@@ -319,13 +320,13 @@ export function CitizenMessagesPage() {
               <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
                 {ticketMessages.length === 0 ? (
                   <div className="text-center py-10 text-gray-400 text-sm font-medium">
-                    No messages from staff yet.
-                  </div>
+                  {t('citizenMessages.noStaffMessages')}
+                </div>
                 ) : (
                   ticketMessages.map(msg => (
                     <div key={msg._id} className={`flex flex-col ${msg.senderRole === 'citizen' ? 'items-end' : 'items-start'}`}>
                       {msg.senderRole !== 'citizen' && (
-                        <span className="text-xs text-gray-400 font-bold ml-1 mb-1">Support Staff</span>
+                        <span className="text-xs text-gray-400 font-bold ml-1 mb-1">{t('citizenMessages.supportStaff')}</span>
                       )}
                       <div className={`max-w-[75%] rounded-xl p-3 text-sm font-medium ${msg.senderRole === 'citizen' ? 'bg-[#000000] text-white' : 'bg-gray-100 text-gray-800'}`}>
                         {msg.content}
@@ -342,14 +343,14 @@ export function CitizenMessagesPage() {
               <div className="p-4 border-t border-gray-200 bg-gray-50 shrink-0">
                 {activeTicket.status === 'CLOSED' ? (
                   <div className="text-center p-3 bg-gray-100 rounded-lg text-sm font-medium text-gray-500 border border-gray-200">
-                    This ticket has been closed.
+                    {t('citizenMessages.ticketClosed')}
                   </div>
                 ) : (
                   <form onSubmit={handleSendTicketReply} className="flex gap-2 items-end">
                     <textarea
                       value={newTicketReply}
                       onChange={(e) => setNewTicketReply(e.target.value)}
-                      placeholder="Type your reply to staff..."
+                      placeholder={t('citizenMessages.replyPlaceholder')}
                       className="flex-1 max-h-32 min-h-[48px] p-3 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-black/5 focus:border-black resize-y font-medium text-gray-800"
                       required
                     />
@@ -358,7 +359,7 @@ export function CitizenMessagesPage() {
                       disabled={isSending || !newTicketReply.trim()}
                       className="bg-[#000000] text-white hover:bg-gray-800 rounded-lg h-[48px] px-6"
                     >
-                      Send Reply
+                      {t('citizenMessages.sendReply')}
                     </Button>
                   </form>
                 )}

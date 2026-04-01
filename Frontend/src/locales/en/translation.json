@@ -142,6 +142,32 @@
     "enable": "Enable"
   },
   "landing": {
+    "platformFeatures": {
+      "aiClassification": {
+        "title": "AI Classification",
+        "desc": "Advanced ML models analyze reports to ensure 100% accurate department routing."
+      },
+      "secureTicketing": {
+        "title": "Secure Ticketing",
+        "desc": "A robust ticket system facilitates direct communication between citizens and staff."
+      },
+      "hodManagement": {
+        "title": "HOD Management",
+        "desc": "Department heads monitor all grievances and manage resource allocation efficiently."
+      },
+      "adminBroadcasts": {
+        "title": "Admin Broadcasts",
+        "desc": "Send targeted announcements to citizens or maintain platform-wide compliance."
+      },
+      "workloadMetrics": {
+        "title": "Workload Metrics",
+        "desc": "Real-time monitoring of staff workload and department resolution performance."
+      },
+      "mapVisualization": {
+        "title": "Map Visualization",
+        "desc": "Track complaint clusters and deployment status across the entire city grid."
+      }
+    },
     "heroTitle": "FixMyCity – Smart Civic Issue Reporting Platform",
     "heroDesc": "Report infrastructure issues in your city such as potholes, broken streetlights, garbage problems, or water leaks. Track the progress of your complaint and help keep your city clean.",
     "howItWorksSteps": {
@@ -156,6 +182,26 @@
       "city": {
         "title": "City Action",
         "desc": "Authorities review and resolve the issue."
+      },
+      "citizenReports": {
+        "title": "Citizen Reports",
+        "desc": "Fill in issue details, upload a photo, and pin the exact location on the map."
+      },
+      "aiClassifier": {
+        "title": "AI Classifier",
+        "desc": "Our AI reads the report and instantly routes it to the correct department."
+      },
+      "hodAssignment": {
+        "title": "HOD Assignment",
+        "desc": "Department head reviews context and assigns the best staff for the job."
+      },
+      "staffResolution": {
+        "title": "Staff Resolution",
+        "desc": "Staff works on the issue and communicates via our secure ticket system."
+      },
+      "citizenUpdate": {
+        "title": "Citizen Update",
+        "desc": "Get notified on completion and close the ticket with your feedback."
       }
     },
     "features": {
@@ -175,6 +221,12 @@
         "title": "Community transparency",
         "desc": "Public dashboard for city-wide awareness."
       }
+    },
+    "roles": {
+      "citizen": { "label": "Citizen", "desc": "Report & track issues" },
+      "hod": { "label": "HOD", "desc": "Assign & oversee tasks" },
+      "staff": { "label": "Staff", "desc": "Resolve & update" },
+      "admin": { "label": "Admin", "desc": "System & broadcast" }
     },
     "undefined": {},
     "mockup": {
@@ -232,7 +284,15 @@
       "q4": "Can I track my complaint status?",
       "a4": "Absolutely. Every report gets a unique ID (e.g., #FMC-1042) that you can track in real-time on your dashboard.",
       "q5": "What areas does FixMyCity cover?",
-      "a5": "Currently, we cover all major metropolitan zones and surrounding districts. We are expanding to more areas every month."
+      "a5": "Currently, we cover all major metropolitan zones and surrounding districts. We are expanding to more areas every month.",
+      "q6": "How are complaints assigned to the right department?",
+      "a6": "When you submit a complaint, our AI classifier reads your title and description and instantly routes it to the correct department — Road, Water, Streetlight, Garbage, or Drainage — so the right team is notified immediately.",
+      "q7": "What is a ticket and how do I use it?",
+      "a7": "A ticket is a dedicated communication thread created when a staff member accepts your complaint. It allows you to chat directly with the person fixing your issue and track progress in real-time.",
+      "q8": "Who is the Head of Department?",
+      "a8": "Each department has a dedicated HOD who oversees all incoming complaints, assigns them to staff members, and monitors the overall department resolution rate.",
+      "q9": "How does the admin send announcements?",
+      "a9": "The system administrator can dispatch targeted announcements (broadcasts) to the entire city or specific roles to communicate platform updates or emergency alerts."
     },
     "cta": {
       "title1": "Start reporting",
@@ -435,5 +495,28 @@
     "categoryLabel": "Category:",
     "viewDetails": "View Details",
     "statusLegend": "Status Legend"
+  },
+  "citizenMessages": {
+    "title": "Message Center",
+    "subtitle": "View announcements and communicate with city staff regarding your tickets.",
+    "announcementsTab": "Announcements",
+    "myTicketsTab": "My Tickets",
+    "closeTicket": "Close Ticket",
+    "ticketClosed": "This ticket has been closed.",
+    "myFiledTickets": "My Filed Tickets",
+    "complaintId": "Complaint ID: {{code}}",
+    "noAnnouncements": "No announcements yet.",
+    "noTickets": "You have not raised any tickets yet",
+    "raised": "Raised {{date}}",
+    "loadingTickets": "Loading tickets...",
+    "openConversation": "Open Conversation",
+    "awaitingStaff": "Awaiting Staff",
+    "closed": "Closed",
+    "backToTickets": "Back to My Tickets",
+    "noStaffMessages": "No messages from staff yet.",
+    "sendReply": "Send Reply",
+    "replyPlaceholder": "Type your reply to staff...",
+    "supportStaff": "Support Staff",
+    "new": "New"
   }
 }

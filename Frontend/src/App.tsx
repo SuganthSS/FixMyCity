@@ -18,6 +18,7 @@ import { AdminDashboard } from './app/AdminDashboard';
 import { StaffDashboard } from './app/StaffDashboard';
 import { StaffMapPage } from './app/StaffMapPage';
 import { HODDashboard } from './app/HODDashboard';
+import { HODMapPage } from './app/HODMapPage';
 import { HODMessagesPage } from './app/HODMessagesPage';
 import { AdminComplaintsPage } from './app/AdminComplaints';
 import { AdminMapPage } from './app/AdminMapPage';
@@ -197,6 +198,11 @@ export default function App() {
         <Route path="/hod/messages" element={
           <ProtectedRoute role={UserRole.HOD}>
             <Layout><HODMessagesPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/hod/map" element={
+          <ProtectedRoute role={UserRole.HOD}>
+            <Layout><HODMapPage /></Layout>
           </ProtectedRoute>
         } />
 
