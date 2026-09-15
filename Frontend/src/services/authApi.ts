@@ -27,6 +27,11 @@ export const authApi = {
         return data;
     },
 
+    googleLogin: async (token: string) => {
+        const { data } = await api.post<LoginResponse>('/auth/google', { token });
+        return data;
+    },
+
     getProfile: async () => {
         const { data } = await api.get('/auth/profile');
         return data;

@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   users: User[];
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string; role?: UserRole }>;
+  loginWithGoogle: (credential: string) => Promise<{ success: boolean; message?: string; role?: UserRole }>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
@@ -59,17 +60,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, fetchUsers]);
 
+  // Shared helper for storing user session and setting state
+  const handleAuthSuccess = (data: any) => {
+    const mappedUser = mapUser(data);
+    localStorage.setItem('fixmycity_token', data.token);
+    localStorage.setItem('fixmycity_user', JSON.stringify(mappedUser));
+    setUser(mappedUser);
+    return { success: true, role: mappedUser.role };
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const data = await authApi.login(email, password);
-
-      const mappedUser = mapUser(data);
-      localStorage.setItem('fixmycity_token', data.token);
-      localStorage.setItem('fixmycity_user', JSON.stringify(mappedUser));
-      setUser(mappedUser);
-      return { success: true, role: mappedUser.role };
+      return handleAuthSuccess(data);
     } catch (error: any) {
       const message = error.response?.data?.message || 'Login failed. Please try again.';
+      return { success: false, message };
+    }
+  };
+
+  const loginWithGoogle = async (credential: string) => {
+    try {
+      const data = await authApi.googleLogin(credential);
+      return handleAuthSuccess(data);
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Google login failed. Please try again.';
       return { success: false, message };
     }
   };
@@ -135,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, users, login, register, logout, updateUser, updateOtherUser, isAuthenticated: !!user, fetchUsers }}>
+    <AuthContext.Provider value={{ user, users, login, loginWithGoogle, register, logout, updateUser, updateOtherUser, isAuthenticated: !!user, fetchUsers }}>
       {children}
     </AuthContext.Provider>
   );

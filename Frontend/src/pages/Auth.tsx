@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 import { Button, Input, Label, Card } from '../components/UI';
@@ -26,20 +27,37 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const handleRedirect = (role?: UserRole) => {
+    if (role === UserRole.ADMIN) navigate('/admin/dashboard');
+    else if (role === UserRole.STAFF) navigate('/staff/dashboard');
+    else if (role === UserRole.HOD) navigate('/hod/dashboard');
+    else navigate('/dashboard');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const result = await login(email, password);
     if (result.success) {
-      if (result.role === UserRole.ADMIN) navigate('/admin/dashboard');
-      else if (result.role === UserRole.STAFF) navigate('/staff/dashboard');
-      else navigate('/dashboard');
+      handleRedirect(result.role);
     } else {
       setError(result.message || 'Login failed');
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (credentialResponse.credential) {
+      setError(null);
+      const result = await loginWithGoogle(credentialResponse.credential);
+      if (result.success) {
+        handleRedirect(result.role);
+      } else {
+        setError(result.message || 'Google login failed');
+      }
     }
   };
 
@@ -118,6 +136,25 @@ export const LoginPage: React.FC = () => {
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-zinc-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-zinc-500">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google Sign-In failed')}
+              shape="rectangular"
+              theme="outline"
+              size="large"
+            />
+          </div>
         </Card>
 
         <p className="text-center mt-8 text-sm text-zinc-600">

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.ts';
 
 // Generate JWT
@@ -83,6 +84,81 @@ const loginUser = async (req: Request, res: Response) => {
   }
 };
 
+// @desc    Authenticate user via Google OAuth
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req: Request, res: Response) => {
+  const { token } = req.body;
+
+  if (!token) {
+    res.status(400).json({ message: 'Google ID token is required' });
+    return;
+  }
+
+  try {
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email) {
+      res.status(400).json({ message: 'Invalid token payload or missing email' });
+      return;
+    }
+
+    const { email, name, picture, sub } = payload;
+
+    // Match existing user strictly by email
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Force role = "citizen" for new Google OAuth users
+      user = await User.create({
+        name: name || 'Google User',
+        email,
+        googleId: sub,
+        avatar: picture || null,
+        authProvider: 'google',
+        role: 'citizen',
+        isApproved: true,
+      });
+    } else if (user.authProvider !== 'google' && !user.googleId) {
+      // Auto-link Google account details to existing account without touching role, department, or approval status
+      user.googleId = sub;
+      user.avatar = picture || user.avatar;
+      user.authProvider = 'google';
+      await user.save();
+    }
+
+    // Check if user is banned
+    if (user.isBanned) {
+      res.status(403).json({ message: 'Your account has been restricted. Contact administrator.' });
+      return;
+    }
+
+    // Check if staff or HOD is approved
+    if ((user.role === 'staff' || user.role === 'hod') && !user.isApproved) {
+      res.status(403).json({ message: 'Your account is pending admin approval.' });
+      return;
+    }
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department || null,
+      token: generateToken(user._id.toString()),
+    });
+  } catch (error: any) {
+    console.error('Google Auth Error:', error);
+    res.status(401).json({ message: 'Google authentication failed. Invalid token.' });
+  }
+};
+
 // @desc    Get user profile
 // @route   GET /api/auth/profile
 // @access  Private
@@ -102,4 +178,4 @@ const getUserProfile = async (req: any, res: Response) => {
   }
 };
 
-export { registerUser, loginUser, getUserProfile };
+export { registerUser, loginUser, googleLogin, getUserProfile };
