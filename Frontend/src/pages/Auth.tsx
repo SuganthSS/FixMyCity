@@ -235,25 +235,29 @@ export const RegisterPage: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-center w-full mb-6">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setMessage({ type: 'error', text: 'Google Sign-In failed' })}
-              text="signup_with"
-              shape="rectangular"
-              theme="outline"
-              size="large"
-            />
-          </div>
+          {role === UserRole.CITIZEN && (
+            <>
+              <div className="flex justify-center w-full mb-6">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setMessage({ type: 'error', text: 'Google Sign-In failed' })}
+                  text="signup_with"
+                  shape="rectangular"
+                  theme="outline"
+                  size="large"
+                />
+              </div>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-200" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-zinc-500">Or continue with email</span>
-            </div>
-          </div>
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-200" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-zinc-500">Or continue with email</span>
+                </div>
+              </div>
+            </>
+          )}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="flex bg-zinc-50 p-1 rounded-xl mb-6">
               <button
