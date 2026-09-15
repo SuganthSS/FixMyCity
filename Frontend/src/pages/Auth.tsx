@@ -22,6 +22,13 @@ const AuthHeader = () => (
   </header>
 );
 
+const handleRedirect = (navigate: ReturnType<typeof useNavigate>, role?: UserRole) => {
+  if (role === UserRole.ADMIN) navigate('/admin/dashboard');
+  else if (role === UserRole.STAFF) navigate('/staff/dashboard');
+  else if (role === UserRole.HOD) navigate('/hod/dashboard');
+  else navigate('/dashboard');
+};
+
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,19 +38,12 @@ export const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const handleRedirect = (role?: UserRole) => {
-    if (role === UserRole.ADMIN) navigate('/admin/dashboard');
-    else if (role === UserRole.STAFF) navigate('/staff/dashboard');
-    else if (role === UserRole.HOD) navigate('/hod/dashboard');
-    else navigate('/dashboard');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const result = await login(email, password);
     if (result.success) {
-      handleRedirect(result.role);
+      handleRedirect(navigate, result.role);
     } else {
       setError(result.message || 'Login failed');
     }
@@ -54,7 +54,7 @@ export const LoginPage: React.FC = () => {
       setError(null);
       const result = await loginWithGoogle(credentialResponse.credential);
       if (result.success) {
-        handleRedirect(result.role);
+        handleRedirect(navigate, result.role);
       } else {
         setError(result.message || 'Google login failed');
       }
@@ -175,9 +175,21 @@ export const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (credentialResponse.credential) {
+      setMessage(null);
+      const result = await loginWithGoogle(credentialResponse.credential);
+      if (result.success) {
+        handleRedirect(navigate, result.role);
+      } else {
+        setMessage({ type: 'error', text: result.message || 'Google sign-up failed' });
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,6 +234,26 @@ export const RegisterPage: React.FC = () => {
               <p>{message.text}</p>
             </div>
           )}
+
+          <div className="flex justify-center w-full mb-6">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setMessage({ type: 'error', text: 'Google Sign-In failed' })}
+              text="signup_with"
+              shape="rectangular"
+              theme="outline"
+              size="large"
+            />
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-zinc-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-zinc-500">Or continue with email</span>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="flex bg-zinc-50 p-1 rounded-xl mb-6">
               <button
