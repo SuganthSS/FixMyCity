@@ -6,6 +6,7 @@ import { adminApi } from '../services/adminApi';
 interface AuthContextType {
   user: User | null;
   users: User[];
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string; role?: UserRole }>;
   loginWithGoogle: (credential: string) => Promise<{ success: boolean; message?: string; role?: UserRole }>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; message?: string }>;
@@ -33,13 +34,20 @@ const mapUser = (backendUser: any): User => ({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Restore session on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('fixmycity_user');
-    const savedToken = localStorage.getItem('fixmycity_token');
-    if (savedUser && savedToken) {
-      setUser(JSON.parse(savedUser));
+    try {
+      const savedUser = localStorage.getItem('fixmycity_user');
+      const savedToken = localStorage.getItem('fixmycity_token');
+      if (savedUser && savedToken) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (error) {
+      console.error('Failed to restore auth session:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -150,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, users, login, loginWithGoogle, register, logout, updateUser, updateOtherUser, isAuthenticated: !!user, fetchUsers }}>
+    <AuthContext.Provider value={{ user, users, isLoading, login, loginWithGoogle, register, logout, updateUser, updateOtherUser, isAuthenticated: !!user, fetchUsers }}>
       {children}
     </AuthContext.Provider>
   );

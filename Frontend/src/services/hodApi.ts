@@ -6,8 +6,13 @@ export const hodApi = {
         return data;
     },
 
-    assignComplaint: async (complaintId: string, staffId: string) => {
-        const { data } = await api.patch(`/hod/complaints/${complaintId}/assign`, { staffId });
+    assignComplaint: async (complaintId: string, staffId: string, note?: string) => {
+        const { data } = await api.patch(`/hod/complaints/${complaintId}/assign`, { staffId, note });
+        return data;
+    },
+
+    transferDepartment: async (complaintId: string, targetDepartment: string, reason?: string) => {
+        const { data } = await api.patch(`/hod/complaints/${complaintId}/transfer-department`, { targetDepartment, reason });
         return data;
     },
 

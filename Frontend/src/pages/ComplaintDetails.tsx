@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,17 +10,28 @@ import {
   AlertCircle,
   MessageSquare,
   Share2,
-  MoreHorizontal
+  MoreHorizontal,
+  RotateCcw,
+  ShieldAlert,
+  History
 } from 'lucide-react';
 import { useComplaints } from '../context/ComplaintContext';
+import { useAuth } from '../context/AuthContext';
 import { Card, Badge, Button } from '../components/UI';
-import { motion } from 'motion/react';
 import { cn, getFullImageUrl } from '../lib/utils';
+import { FeedbackForm } from '../components/FeedbackForm';
+import { InternalNotes } from '../components/InternalNotes';
+import { complaintApi } from '../services/complaintApi';
 
 export const ComplaintDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { complaints, refreshComplaints, loading } = useComplaints();
-  const complaint = complaints.find(c => c.id === id);
+  const { user } = useAuth();
+  const complaint = complaints.find(c => c.id === id || c._id === id || c.trackingCode === id || c.complaintCode === id);
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isReopening, setIsReopening] = useState(false);
+  const [reopenError, setReopenError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!complaint && !loading) {
@@ -51,6 +62,47 @@ export const ComplaintDetailsPage: React.FC = () => {
     );
   }
 
+  const displayCode = complaint.trackingCode || complaint.complaintCode || complaint.id || complaint._id || '';
+  const displayStage = (complaint.workflowStage || complaint.status || 'SUBMITTED').toString();
+  const displayDepartment = (complaint.assignedDepartment || complaint.department || 'Not Assigned').toString();
+
+  const mediaList = (complaint.media && complaint.media.length > 0)
+    ? complaint.media
+    : complaint.imageUrl
+    ? [{ url: complaint.imageUrl, caption: 'Report Image' }]
+    : [];
+
+  const activeMediaUrl = mediaList[activeImageIndex]?.url || complaint.imageUrl || '';
+
+  const isOwner = user && (user.id === complaint.citizenId || user._id === complaint.citizenId || user.id === (complaint.citizenId as any)?._id);
+  const isStaffOrAdmin = user && (user.role === 'staff' || user.role === 'hod' || user.role === 'admin');
+  const isResolved = displayStage === 'RESOLVED';
+
+  let canReopen = false;
+  if (isResolved && isOwner) {
+    const resolvedTime = complaint.metrics?.resolvedAt || complaint.resolutionProof?.resolvedAt;
+    if (resolvedTime) {
+      const daysDiff = (new Date().getTime() - new Date(resolvedTime).getTime()) / (1000 * 3600 * 24);
+      canReopen = daysDiff <= 7;
+    } else {
+      canReopen = true;
+    }
+  }
+
+  const handleReopen = async () => {
+    if (!window.confirm('Are you sure you want to reopen this complaint?')) return;
+    setIsReopening(true);
+    setReopenError(null);
+    try {
+      await complaintApi.reopenComplaint(complaint.id || complaint._id || '');
+      refreshComplaints();
+    } catch (err: any) {
+      setReopenError(err.response?.data?.message || 'Failed to reopen complaint.');
+    } finally {
+      setIsReopening(false);
+    }
+  };
+
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       <header className="flex items-center justify-between">
@@ -62,13 +114,32 @@ export const ComplaintDetailsPage: React.FC = () => {
           </Link>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-mono text-zinc-400">#{complaint.id}</span>
-              <Badge variant={complaint.status}>{complaint.status.replace('_', ' ')}</Badge>
+              <span className="text-xs font-mono font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">
+                {displayCode}
+              </span>
+              <Badge variant={displayStage}>{displayStage.replace('_', ' ')}</Badge>
+              {complaint.sla?.isBreached && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                  <ShieldAlert className="w-3 h-3" /> SLA BREACHED
+                </span>
+              )}
             </div>
             <h1 className="text-2xl font-bold text-zinc-900">{complaint.title}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {canReopen && (
+            <Button
+              variant="outline"
+              size="sm"
+              isLoading={isReopening}
+              onClick={handleReopen}
+              className="text-amber-700 border-amber-300 hover:bg-amber-50"
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+              Reopen Issue
+            </Button>
+          )}
           <Button variant="outline" size="icon">
             <Share2 className="w-4 h-4" />
           </Button>
@@ -78,35 +149,73 @@ export const ComplaintDetailsPage: React.FC = () => {
         </div>
       </header>
 
+      {reopenError && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-2xl">
+          {reopenError}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <Card className="overflow-hidden">
-            <div className="aspect-video w-full bg-zinc-100">
-              <img
-                src={getFullImageUrl(complaint.imageUrl)}
-                alt={complaint.title}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
+            <div className="aspect-video w-full bg-zinc-100 relative">
+              {activeMediaUrl ? (
+                <img
+                  src={getFullImageUrl(activeMediaUrl)}
+                  alt={complaint.title}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-zinc-400">No Image Uploaded</div>
+              )}
             </div>
+
+            {mediaList.length > 1 && (
+              <div className="p-4 bg-zinc-50 border-t border-zinc-100 flex items-center gap-3 overflow-x-auto">
+                {mediaList.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={cn(
+                      'w-16 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all',
+                      activeImageIndex === idx ? 'border-[#F27D26] ring-2 ring-[#F27D26]/20' : 'border-zinc-200 opacity-60 hover:opacity-100'
+                    )}
+                  >
+                    <img src={getFullImageUrl(item.url)} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="p-6 space-y-6">
               <div className="space-y-2">
                 <h3 className="text-lg font-bold text-zinc-900">Description</h3>
                 <p className="text-zinc-600 leading-relaxed">{complaint.description}</p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-zinc-100">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t border-zinc-100">
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Category</p>
                   <p className="text-sm font-semibold text-zinc-900">{complaint.category}</p>
+                  {complaint.subCategory && (
+                    <p className="text-xs text-zinc-500">({complaint.subCategory})</p>
+                  )}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Priority</p>
-                  <Badge variant={complaint.priority}>{complaint.priority}</Badge>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Severity / Priority</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {complaint.severity && <Badge variant={complaint.severity}>{complaint.severity}</Badge>}
+                    <Badge variant={complaint.priority}>{complaint.priority}</Badge>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Department</p>
-                  <p className="text-sm font-semibold text-zinc-900">{complaint.department || 'Not Assigned'}</p>
+                  <p className="text-sm font-semibold text-zinc-900">{displayDepartment}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Tracking Code</p>
+                  <p className="text-sm font-mono font-bold text-[#F27D26]">{displayCode}</p>
                 </div>
               </div>
             </div>
@@ -119,20 +228,64 @@ export const ComplaintDetailsPage: React.FC = () => {
                 <MapPin className="w-5 h-5 text-[#F27D26]" />
               </div>
               <div>
-                <p className="text-sm font-bold text-zinc-900">{complaint.location}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">Reported from this location</p>
+                <p className="text-sm font-bold text-zinc-900">
+                  {typeof complaint.location === 'string' ? complaint.location : complaint.location?.address || 'Address provided'}
+                </p>
+                {complaint.landmark && (
+                  <p className="text-xs text-zinc-500 mt-0.5">Landmark: {complaint.landmark}</p>
+                )}
                 <Button variant="outline" size="sm" className="mt-3 bg-white">View on Map</Button>
               </div>
             </div>
           </Card>
+
+          {complaint.assignmentHistory && complaint.assignmentHistory.length > 0 && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4 text-zinc-900 font-bold text-lg">
+                <History className="w-5 h-5 text-[#F27D26]" />
+                Assignment History
+              </div>
+              <div className="space-y-3">
+                {complaint.assignmentHistory.map((item, idx) => (
+                  <div key={idx} className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 flex items-center justify-between text-xs">
+                    <div>
+                      <p className="font-bold text-zinc-800">
+                        Department: {item.department || 'Unassigned'}
+                      </p>
+                      {item.note && <p className="text-zinc-500 italic mt-0.5">{item.note}</p>}
+                    </div>
+                    <span className="text-[10px] text-zinc-400">
+                      {new Date(item.assignedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {isResolved && isOwner && (
+            <FeedbackForm
+              complaintId={complaint.id || complaint._id || ''}
+              existingFeedback={complaint.citizenFeedback}
+              onFeedbackSubmitted={refreshComplaints}
+            />
+          )}
+
+          {isStaffOrAdmin && (
+            <InternalNotes
+              complaintId={complaint.id || complaint._id || ''}
+              notes={complaint.internalNotes}
+              onNoteAdded={refreshComplaints}
+            />
+          )}
         </div>
 
         <div className="space-y-8">
           <Card className="p-6">
             <h3 className="text-lg font-bold text-zinc-900 mb-6">Complaint Timeline</h3>
             <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
-              {complaint.timeline && complaint.timeline.length > 0 ? (
-                complaint.timeline.map((event, i) => (
+              {complaint.statusHistory && complaint.statusHistory.length > 0 ? (
+                complaint.statusHistory.map((event, i) => (
                   <div key={i} className="relative pl-8">
                     <div className={cn(
                       'absolute left-0 top-1.5 w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10',
@@ -142,10 +295,10 @@ export const ComplaintDetailsPage: React.FC = () => {
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-zinc-900">{event.status.replace('_', ' ')}</p>
-                        <p className="text-[10px] font-medium text-zinc-400">{new Date(event.timestamp).toLocaleDateString()}</p>
+                        <p className="text-sm font-bold text-zinc-900">{(event.stage || event.status || 'SUBMITTED').replace('_', ' ')}</p>
+                        <p className="text-[10px] font-medium text-zinc-400">{new Date(event.updatedAt).toLocaleDateString()}</p>
                       </div>
-                      {event.note && <p className="text-xs text-zinc-500 leading-relaxed">{event.note}</p>}
+                      {event.message && <p className="text-xs text-zinc-500 leading-relaxed">{event.message}</p>}
                     </div>
                   </div>
                 ))

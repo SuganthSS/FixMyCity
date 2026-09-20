@@ -216,7 +216,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="min-w-0">
                     <h4 className="font-bold text-slate-900 text-base md:text-lg group-hover:text-[#374151] transition-colors mb-1 truncate">{complaint.title}</h4>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] md:text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-                      <span className="flex items-center gap-2 px-2 py-1 bg-slate-100 rounded-lg max-w-[150px] md:max-w-none"><MapPin className="w-3 h-3 shrink-0" /> <span className="truncate">{complaint.location}</span></span>
+                      <span className="flex items-center gap-2 px-2 py-1 bg-slate-100 rounded-lg max-w-[150px] md:max-w-none"><MapPin className="w-3 h-3 shrink-0" /> <span className="truncate">{typeof complaint.location === 'string' ? complaint.location : complaint.location?.address || complaint.location?.landmark || complaint.location?.city || 'Location provided'}</span></span>
                       <span className="flex items-center gap-2 shrink-0"><Clock className="w-3 h-3" /> {new Date(complaint.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>

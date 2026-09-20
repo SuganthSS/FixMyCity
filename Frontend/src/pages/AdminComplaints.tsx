@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Search, 
   Filter, 
   MoreVertical, 
-  ChevronRight,
   User,
   Building2,
-  AlertCircle
 } from 'lucide-react';
-import { Complaint, ComplaintStatus, Department, Priority } from '../types';
+import { Complaint, WorkflowStage, Department } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
-import { motion } from 'motion/react';
 import { cn, getFullImageUrl } from '../lib/utils';
 import { complaintApi } from '../services/complaintApi';
+import { hodApi } from '../services/hodApi';
+import { ResolutionModal } from '../components/ResolutionModal';
 
 export const AdminComplaintsPage: React.FC = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Resolution Modal state
+  const [resolutionTargetId, setResolutionTargetId] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchComplaints();
   }, []);
 
@@ -34,29 +37,40 @@ export const AdminComplaintsPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: ComplaintStatus) => {
+  const handleStageSelect = async (id: string, newStage: string) => {
+    if (newStage === 'RESOLVED') {
+      setResolutionTargetId(id);
+      return;
+    }
+
     try {
-      await complaintApi.updateStatus(id, newStatus);
-      setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: newStatus, updatedAt: new Date().toISOString() } : c));
-    } catch (error) {
-      console.error('Error updating status:', error);
+      await complaintApi.updateStage(id, { stage: newStage });
+      fetchComplaints();
+    } catch (error: any) {
+      console.error('Error updating stage:', error);
+      alert(error.response?.data?.message || 'Failed to update workflow stage.');
     }
   };
 
-  const handleDepartmentChange = async (id: string, newDept: Department) => {
+  const handleDepartmentChange = async (id: string, targetDepartment: string) => {
     try {
-      await complaintApi.updateDepartment(id, newDept);
-      setComplaints(prev => prev.map(c => c.id === id ? { ...c, department: newDept, updatedAt: new Date().toISOString() } : c));
-    } catch (error) {
-      console.error('Error updating department:', error);
+      await hodApi.transferDepartment(id, targetDepartment);
+      fetchComplaints();
+    } catch (error: any) {
+      console.error('Error transferring department:', error);
+      alert(error.response?.data?.message || 'Failed to transfer department.');
     }
   };
 
-  const filtered = complaints.filter(c => 
-    c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    c.citizenName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.id.includes(searchQuery)
-  );
+  const filtered = complaints.filter((c) => {
+    const tracking = c.trackingCode || c.complaintCode || c.id || c._id || '';
+    const citizen = c.citizenName || '';
+    return (
+      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      citizen.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tracking.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -75,7 +89,7 @@ export const AdminComplaintsPage: React.FC = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <Input 
-            placeholder="Search by ID, title, or citizen name..." 
+            placeholder="Search by Tracking Code (FMC-YYYY-XXXX), title, or citizen..." 
             className="pl-10 h-11"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -93,8 +107,8 @@ export const AdminComplaintsPage: React.FC = () => {
               <tr className="bg-zinc-50 border-b border-zinc-100">
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Complaint</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Citizen</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Priority</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Priority / Severity</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Workflow Stage</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Department</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -107,78 +121,98 @@ export const AdminComplaintsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filtered.map((complaint) => (
-                <tr key={complaint.id} className="hover:bg-zinc-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-100">
-                        <img src={getFullImageUrl(complaint.imageUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-zinc-900 line-clamp-1">{complaint.title}</p>
-                        <p className="text-[10px] font-mono text-zinc-400">#{complaint.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
-                        <User className="w-3 h-3 text-zinc-500" />
-                      </div>
-                      <span className="text-sm text-zinc-600">{complaint.citizenName}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant={complaint.priority}>{complaint.priority}</Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <select 
-                      className={cn(
-                        "text-xs font-bold rounded-lg px-2 py-1 border-none focus:ring-2 focus:ring-offset-1 transition-all",
-                        complaint.status === ComplaintStatus.RESOLVED ? "bg-green-100 text-green-700" : 
-                        complaint.status === ComplaintStatus.SUBMITTED ? "bg-yellow-100 text-yellow-700" :
-                        "bg-zinc-100 text-zinc-700"
-                      )}
-                      value={complaint.status}
-                      onChange={(e) => handleStatusChange(complaint.id, e.target.value as ComplaintStatus)}
-                    >
-                      {Object.values(ComplaintStatus).map(s => (
-                        <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-zinc-400" />
-                      <select 
-                        className="text-xs font-medium bg-transparent border-none focus:ring-0 p-0 text-zinc-600"
-                        value={complaint.department || ''}
-                        onChange={(e) => handleDepartmentChange(complaint.id, e.target.value as Department)}
-                      >
-                        <option value="">Unassigned</option>
-                        {Object.values(Department).map(d => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-8 px-3">
-                        Details
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-                ))
+                filtered.map((complaint) => {
+                  const displayCode = complaint.trackingCode || complaint.complaintCode || complaint.id || complaint._id || '';
+                  const displayStage = (complaint.workflowStage || complaint.status || 'SUBMITTED').toString();
+                  const displayDepartment = (complaint.assignedDepartment || complaint.department || '').toString();
+                  const displayImage = complaint.media?.[0]?.url || complaint.imageUrl || '';
+
+                  return (
+                    <tr key={complaint.id || complaint._id} className="hover:bg-zinc-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-100 bg-zinc-100 flex items-center justify-center">
+                            {displayImage ? (
+                              <img src={getFullImageUrl(displayImage)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <span className="text-[10px] text-zinc-400">No Img</span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-zinc-900 line-clamp-1">{complaint.title}</p>
+                            <p className="text-[10px] font-mono font-bold text-[#F27D26]">{displayCode}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center">
+                            <User className="w-3 h-3 text-zinc-500" />
+                          </div>
+                          <span className="text-sm text-zinc-600">{complaint.citizenName || 'Citizen'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {complaint.severity && <Badge variant={complaint.severity}>{complaint.severity}</Badge>}
+                          <Badge variant={complaint.priority}>{complaint.priority}</Badge>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <select 
+                          className="text-xs font-bold rounded-lg px-2.5 py-1.5 border border-zinc-200 bg-white focus:ring-2 focus:ring-[#F27D26]/20 transition-all cursor-pointer"
+                          value={displayStage}
+                          onChange={(e) => handleStageSelect(complaint.id || complaint._id || '', e.target.value)}
+                        >
+                          {Object.values(WorkflowStage).map((s) => (
+                            <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-zinc-400" />
+                          <select 
+                            className="text-xs font-medium bg-transparent border border-zinc-200 rounded-lg px-2 py-1 text-zinc-700 cursor-pointer"
+                            value={displayDepartment}
+                            onChange={(e) => handleDepartmentChange(complaint.id || complaint._id || '', e.target.value as Department)}
+                          >
+                            <option value="">Unassigned</option>
+                            {Object.values(Department).map((d) => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                          <Link to={`/complaint/${complaint.id || complaint._id}`}>
+                            <Button variant="outline" size="sm" className="h-8 px-3">
+                              Details
+                            </Button>
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </Card>
+
+      {resolutionTargetId && (
+        <ResolutionModal
+          complaintId={resolutionTargetId}
+          isOpen={Boolean(resolutionTargetId)}
+          onClose={() => setResolutionTargetId(null)}
+          onResolvedSuccess={fetchComplaints}
+        />
+      )}
     </div>
   );
 };

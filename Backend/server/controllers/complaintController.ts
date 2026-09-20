@@ -1,77 +1,173 @@
 import { Request, Response } from 'express';
-import Complaint from '../models/Complaint.ts';
-import Notification from '../models/Notification.ts';
-import { analyzeComplaint } from '../services/mlService.ts';
+import Complaint from '../models/Complaint';
+import { Counter } from '../models/Counter';
+import Notification from '../models/Notification';
+import { WORKFLOW_TRANSITIONS, CATEGORY_TAXONOMY } from '../config/workflow';
+import { analyzeComplaint } from '../services/mlService';
 
-// @desc    Create a new complaint
+export const sanitizeComplaintForResponse = (complaintDoc: any, requesterRole?: string, isSearch: boolean = false) => {
+  const plainObj = typeof complaintDoc.toObject === 'function' ? complaintDoc.toObject() : { ...complaintDoc };
+
+  if (requesterRole === 'citizen') {
+    delete plainObj.internalNotes;
+    delete plainObj.auditLogs;
+  }
+
+  if (requesterRole === 'staff' && !isSearch) {
+    delete plainObj.citizenId;
+    delete plainObj.citizenName;
+  }
+
+  return plainObj;
+};
+
+// @desc    Create a new complaint (V2)
 // @route   POST /api/complaints
-// @access  Private
+// @access  Private (Citizen)
 const createComplaint = async (req: any, res: Response) => {
   try {
     const { 
       title, 
       description, 
+      category,
+      subCategory,
+      severity,
       location, 
       latitude, 
       longitude, 
-      category, 
-      priority,
       landmark,
       issueDate,
       recurringIssue
     } = req.body;
+
     const sanitizedCategory = category && category !== 'undefined' ? category : undefined;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || '';
+    const currentYear = new Date().getFullYear();
+    const counterKey = `complaint_tracking_${currentYear}`;
 
-    console.log('Submission Body:', req.body);
-    console.log('Submission File:', req.file);
+    const counter = await Counter.findOneAndUpdate(
+      { _id: counterKey },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const trackingCode = `FMC-${currentYear}-${String(counter.seq).padStart(4, '0')}`;
 
-    // Explicitly parse boolean and handle Date
+    const uploadedFiles = req.files as Express.Multer.File[] | undefined;
+    let media: Array<{ url: string; caption?: string; uploadedAt?: Date; isResolutionProof?: boolean }> = [];
+
+    if (uploadedFiles && uploadedFiles.length > 0) {
+      media = uploadedFiles.slice(0, 5).map((file) => ({
+        url: `/uploads/${file.filename}`,
+        caption: 'Report Image',
+        uploadedAt: new Date(),
+        isResolutionProof: false,
+      }));
+    } else if (req.file) {
+      media = [{
+        url: `/uploads/${req.file.filename}`,
+        caption: 'Report Image',
+        uploadedAt: new Date(),
+        isResolutionProof: false,
+      }];
+    } else if (req.body.imageUrl) {
+      media = [{
+        url: req.body.imageUrl,
+        caption: 'Report Image',
+        uploadedAt: new Date(),
+        isResolutionProof: false,
+      }];
+    }
+
+    const primaryImageUrl = media.length > 0 ? media[0].url : '';
+
     const parsedRecurringIssue = recurringIssue === 'true' || recurringIssue === true;
     const parsedIssueDate = issueDate ? new Date(issueDate) : undefined;
 
-    // ML Service Integration
-    const mlAnalysis = await analyzeComplaint(title, description, imageUrl);
-
-    // Generate complaintCode
-    const lastComplaint = await Complaint.findOne({ complaintCode: { $exists: true } }).sort({ createdAt: -1 });
-    let nextCodeNum = 1001;
-    if (lastComplaint && lastComplaint.complaintCode) {
-      const match = lastComplaint.complaintCode.match(/CMP-(\d+)/);
-      if (match) {
-        nextCodeNum = parseInt(match[1], 10) + 1;
-      }
+    let mlAnalysis = { category: 'General', priority: 'MEDIUM' };
+    try {
+      mlAnalysis = await analyzeComplaint(title, description, primaryImageUrl);
+    } catch (e) {
+      console.warn('ML Analysis skipped or failed:', e);
     }
-    const complaintCode = `CMP-${nextCodeNum}`;
+
+    const finalCategory = sanitizedCategory || mlAnalysis.category;
+    const parsedSubCategory = subCategory || (CATEGORY_TAXONOMY[finalCategory] ? CATEGORY_TAXONOMY[finalCategory][0] : 'General');
+    const parsedSeverity = severity || 'MODERATE';
+
+    const createdDate = new Date();
+    const dueDate = new Date(createdDate.getTime() + 48 * 60 * 60 * 1000);
+
+    const locationObj = {
+      address: typeof location === 'string' ? location : location?.address || description?.substring(0, 50) || '',
+      landmark: landmark || location?.landmark || '',
+      city: location?.city || 'Default City',
+      ward: location?.ward || 'General',
+      pincode: location?.pincode || '',
+      coordinates: {
+        latitude: latitude ? Number(latitude) : location?.coordinates?.latitude,
+        longitude: longitude ? Number(longitude) : location?.coordinates?.longitude,
+      },
+    };
+
+    let geoPoint = null;
+    if (locationObj.coordinates.latitude !== undefined && locationObj.coordinates.longitude !== undefined) {
+      geoPoint = {
+        type: 'Point',
+        coordinates: [locationObj.coordinates.longitude, locationObj.coordinates.latitude],
+      };
+    }
 
     const complaint = await Complaint.create({
-      complaintCode,
+      schemaVersion: 2,
+      createdByRole: req.user.role || 'citizen',
+      trackingCode,
+      complaintCode: trackingCode,
       title,
       description,
-      location,
-      latitude: latitude ? Number(latitude) : undefined,
-      longitude: longitude ? Number(longitude) : undefined,
-      imageUrl,
-      category: sanitizedCategory || mlAnalysis.category,
-      department: sanitizedCategory || mlAnalysis.category,
-      priority: priority || mlAnalysis.priority || 'MEDIUM',
-      landmark,
+      category: finalCategory,
+      subCategory: parsedSubCategory,
+      severity: parsedSeverity,
+      workflowStage: 'SUBMITTED',
+      status: 'SUBMITTED',
+      assignedDepartment: finalCategory,
+      department: finalCategory,
+      media,
+      imageUrl: primaryImageUrl,
+      location: locationObj,
+      geoPoint,
+      latitude: locationObj.coordinates.latitude,
+      longitude: locationObj.coordinates.longitude,
+      landmark: locationObj.landmark,
       issueDate: parsedIssueDate,
       recurringIssue: parsedRecurringIssue,
       citizenId: req.user._id,
       citizenName: req.user.name,
+      sla: {
+        targetResolutionHours: 48,
+        dueDate,
+        isBreached: false,
+      },
+      statusHistory: [
+        {
+          stage: 'SUBMITTED',
+          status: 'SUBMITTED',
+          message: 'Complaint submitted successfully.',
+          updatedBy: req.user._id,
+          updatedAt: createdDate,
+        },
+      ],
       timeline: [
         {
           status: 'SUBMITTED',
           message: 'Complaint has been submitted successfully.',
+          updatedAt: createdDate,
         },
       ],
     });
 
-    res.status(201).json(complaint);
-  } catch (error) {
+    res.status(201).json(sanitizeComplaintForResponse(complaint, req.user.role));
+  } catch (error: any) {
     console.error('Error creating complaint:', error);
-    res.status(400).json({ message: 'Invalid complaint data' });
+    res.status(400).json({ message: 'Invalid complaint data', error: error.message });
   }
 };
 
@@ -89,29 +185,26 @@ const getComplaints = async (req: any, res: Response) => {
       query.title = { $regex: req.query.search, $options: 'i' };
     }
 
-    if (req.query.complaintCode) {
-      query.complaintCode = { $regex: new RegExp(`^${req.query.complaintCode}$`, 'i') };
+    if (req.query.complaintCode || req.query.trackingCode) {
+      const code = req.query.trackingCode || req.query.complaintCode;
+      query.$or = [
+        { trackingCode: { $regex: new RegExp(`^${code}$`, 'i') } },
+        { complaintCode: { $regex: new RegExp(`^${code}$`, 'i') } },
+      ];
     }
 
-    // Staff filter: only assigned complaints unless searching for messaging
-    if (req.user.role === 'staff' && !req.query.search && !req.query.complaintCode) {
-      query.assignedTo = req.user._id;
+    if (req.user.role === 'staff' && !req.query.search && !req.query.complaintCode && !req.query.trackingCode) {
+      query.$or = [
+        { assignedStaff: req.user._id },
+        { assignedTo: req.user._id },
+      ];
     }
 
-    let complaints = await Complaint.find(query).select('+department').populate('citizenId', 'name email');
-    console.log(`DEBUG: Found ${complaints.length} complaints for query`, query);
+    const complaints = await Complaint.find(query).select('+department').populate('citizenId', 'name email');
+    const isSearch = Boolean(req.query.search);
+    const responseData = complaints.map((c) => sanitizeComplaintForResponse(c, req.user.role, isSearch));
 
-    // Privacy rules for STAFF - allow info if searching for messaging purposes
-    if (req.user.role === 'staff' && !req.query.search) {
-      complaints = complaints.map((complaint: any) => {
-        const c = complaint.toObject() as any;
-        delete c.citizenId;
-        delete c.citizenName;
-        return c;
-      });
-    }
-
-    res.json(complaints);
+    res.json(responseData);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -125,78 +218,276 @@ const getComplaintById = async (req: any, res: Response) => {
   try {
     const complaint = await Complaint.findById(req.params.id).populate('citizenId', 'name email');
 
-    if (complaint) {
-      // Access control: only creator, staff or admin
-      if (req.user.role === 'admin' || req.user.role === 'staff' || complaint.citizenId._id.toString() === req.user._id.toString()) {
-        let responseData = complaint.toObject() as any;
-
-        // Privacy rules for STAFF
-        if (req.user.role === 'staff') {
-          delete responseData.citizenId;
-          delete responseData.citizenName;
-        }
-
-        res.json(responseData);
-      } else {
-        res.status(403).json({ message: 'Not authorized to view this complaint' });
-      }
-    } else {
-      res.status(404).json({ message: 'Complaint not found' });
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
     }
+
+    const isOwner = complaint.citizenId._id.toString() === req.user._id.toString();
+    const isAuthorized = req.user.role === 'admin' || req.user.role === 'hod' || req.user.role === 'staff' || isOwner;
+
+    if (!isAuthorized) {
+      return res.status(403).json({ message: 'Not authorized to view this complaint' });
+    }
+
+    res.json(sanitizeComplaintForResponse(complaint, req.user.role));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// @desc    Update complaint status
+// @desc    Update complaint workflow stage
+// @route   PATCH /api/complaints/:id/stage
+// @access  Private (Staff, HOD, Admin)
+const updateComplaintStage = async (req: any, res: Response) => {
+  try {
+    const { stage, message, completionNotes, resolutionImages } = req.body;
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
+    }
+
+    const currentStage = complaint.workflowStage || 'SUBMITTED';
+    const transitionRule = WORKFLOW_TRANSITIONS[currentStage];
+
+    if (!transitionRule || !transitionRule.allowedNext.includes(stage)) {
+      return res.status(400).json({
+        message: `Invalid stage transition from ${currentStage} to ${stage}. Allowed next stages: ${transitionRule?.allowedNext.join(', ') || 'None'}`,
+      });
+    }
+
+    if (!transitionRule.allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `Role '${req.user.role}' is not permitted to transition from ${currentStage}. Required roles: ${transitionRule.allowedRoles.join(', ')}`,
+      });
+    }
+
+    if (stage === 'RESOLVED') {
+      if (!completionNotes || completionNotes.trim() === '') {
+        return res.status(400).json({ message: 'Completion notes are required when resolving a complaint.' });
+      }
+
+      const images = Array.isArray(resolutionImages) ? resolutionImages : (req.files ? (req.files as Express.Multer.File[]).map(f => `/uploads/${f.filename}`) : []);
+      if (images.length === 0) {
+        return res.status(400).json({ message: 'At least one resolution proof image is required to resolve a complaint.' });
+      }
+
+      complaint.resolutionProof = {
+        images,
+        notes: completionNotes,
+        resolvedBy: req.user._id,
+        resolvedAt: new Date(),
+      };
+      complaint.metrics = {
+        ...(complaint.metrics || {}),
+        resolvedAt: new Date(),
+      };
+    }
+
+    if (stage === 'CLOSED') {
+      complaint.metrics = {
+        ...(complaint.metrics || {}),
+        closedAt: new Date(),
+      };
+    }
+
+    complaint.workflowStage = stage;
+    complaint.status = stage;
+    complaint.lastStatusChangeAt = new Date();
+
+    const stageMessage = message || `Workflow stage updated to ${stage}`;
+    complaint.statusHistory.push({
+      stage,
+      status: stage,
+      message: stageMessage,
+      updatedBy: req.user._id,
+      updatedAt: new Date(),
+    });
+
+    complaint.timeline.push({
+      status: stage,
+      message: stageMessage,
+      updatedAt: new Date(),
+    });
+
+    await Notification.create({
+      user: complaint.citizenId,
+      title: `Complaint Stage: ${stage}`,
+      message: `Your complaint stage was updated to ${stage}`,
+      complaint: complaint._id,
+    });
+
+    const updatedComplaint = await complaint.save();
+    res.json(sanitizeComplaintForResponse(updatedComplaint, req.user.role));
+  } catch (error: any) {
+    console.error('Error updating stage:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Legacy update complaint status
 // @route   PATCH /api/complaints/:id/status
 // @access  Private/Admin
 const updateComplaintStatus = async (req: any, res: Response) => {
+  return updateComplaintStage(req, res);
+};
+
+// @desc    Submit citizen feedback
+// @route   POST /api/complaints/:id/feedback
+// @access  Private (Citizen owner only)
+const submitFeedback = async (req: any, res: Response) => {
   try {
-    const { status, message } = req.body;
+    const { rating, comment } = req.body;
     const complaint = await Complaint.findById(req.params.id);
 
-    if (complaint) {
-      if (status) {
-        complaint.status = status;
-        complaint.timeline.push({
-          status,
-          message: message || `Status updated to ${status}`,
-        });
-      }
-
-      if (status) {
-        // Create notification for citizen
-        await Notification.create({
-          user: complaint.citizenId,
-          title: 'Status Updated',
-          message: `Your complaint status was updated to ${status}`,
-          complaint: complaint._id
-        });
-      }
-
-      const updatedComplaint = await complaint.save();
-      res.json(updatedComplaint);
-    } else {
-      res.status(404).json({ message: 'Complaint not found' });
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+
+    if (complaint.citizenId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the complaint owner can submit feedback' });
+    }
+
+    const numRating = Number(rating);
+    if (!numRating || numRating < 1 || numRating > 5) {
+      return res.status(400).json({ message: 'Rating must be a number between 1 and 5' });
+    }
+
+    complaint.citizenFeedback = {
+      rating: numRating,
+      comment: comment || '',
+      submittedAt: new Date(),
+    };
+
+    const updatedComplaint = await complaint.save();
+    res.json(sanitizeComplaintForResponse(updatedComplaint, req.user.role));
+  } catch (error: any) {
+    console.error('Error submitting feedback:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// @desc    Update complaint department
-// @route   PATCH /api/complaints/:id/department
-// @access  Private/Staff/Admin
-const updateComplaintDepartment = async (req: any, res: Response) => {
-  return res.status(410).json({ message: 'Department is now set automatically by the AI classifier. Manual override is disabled.' });
+// @desc    Reopen a complaint
+// @route   POST /api/complaints/:id/reopen
+// @access  Private (Citizen owner only)
+const reopenComplaint = async (req: any, res: Response) => {
+  try {
+    const { reason } = req.body;
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
+    }
+
+    if (complaint.citizenId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the complaint owner can reopen the complaint' });
+    }
+
+    if (complaint.workflowStage !== 'RESOLVED') {
+      return res.status(400).json({ message: 'Only resolved complaints can be reopened' });
+    }
+
+    const resolvedAt = complaint.metrics?.resolvedAt || complaint.resolutionProof?.resolvedAt;
+    if (resolvedAt) {
+      const daysDiff = (new Date().getTime() - new Date(resolvedAt).getTime()) / (1000 * 3600 * 24);
+      if (daysDiff > 7) {
+        return res.status(400).json({ message: 'Complaints can only be reopened within 7 days of resolution' });
+      }
+    }
+
+    complaint.workflowStage = 'REOPENED';
+    complaint.status = 'REOPENED';
+    complaint.resolutionVerified = false;
+    complaint.lastStatusChangeAt = new Date();
+
+    const msg = reason || 'Complaint reopened by citizen';
+    complaint.statusHistory.push({
+      stage: 'REOPENED',
+      status: 'REOPENED',
+      message: msg,
+      updatedBy: req.user._id,
+      updatedAt: new Date(),
+    });
+
+    complaint.timeline.push({
+      status: 'REOPENED',
+      message: msg,
+      updatedAt: new Date(),
+    });
+
+    const updatedComplaint = await complaint.save();
+    res.json(sanitizeComplaintForResponse(updatedComplaint, req.user.role));
+  } catch (error: any) {
+    console.error('Error reopening complaint:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };
 
-// @desc    Update complaint priority
-// @route   PATCH /api/complaints/:id/priority
-// @access  Private/Admin
+// @desc    Add internal note
+// @route   POST /api/complaints/:id/internal-notes
+// @access  Private (Staff, HOD, Admin)
+const addInternalNote = async (req: any, res: Response) => {
+  try {
+    const { note } = req.body;
+    if (!note || note.trim() === '') {
+      return res.status(400).json({ message: 'Note text is required' });
+    }
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
+    }
+
+    complaint.internalNotes.push({
+      note,
+      author: req.user._id,
+      role: req.user.role,
+      createdAt: new Date(),
+    });
+
+    const updatedComplaint = await complaint.save();
+    res.json(sanitizeComplaintForResponse(updatedComplaint, req.user.role));
+  } catch (error: any) {
+    console.error('Error adding internal note:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Add public/role comment
+// @route   POST /api/complaints/:id/comments
+// @access  Private
+const addComment = async (req: any, res: Response) => {
+  try {
+    const { text } = req.body;
+    if (!text || text.trim() === '') {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
+    }
+
+    complaint.comments.push({
+      text,
+      author: req.user._id,
+      role: req.user.role,
+      createdAt: new Date(),
+    });
+
+    const updatedComplaint = await complaint.save();
+    res.json(sanitizeComplaintForResponse(updatedComplaint, req.user.role));
+  } catch (error: any) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const updateComplaintDepartment = async (req: any, res: Response) => {
+  return res.status(410).json({ message: 'Department is set via transfer-department endpoint by HOD/Admin.' });
+};
+
 const updateComplaintPriority = async (req: any, res: Response) => {
   try {
     const { priority } = req.body;
@@ -204,9 +495,8 @@ const updateComplaintPriority = async (req: any, res: Response) => {
 
     if (complaint) {
       complaint.priority = priority || complaint.priority;
-
       const updatedComplaint = await complaint.save();
-      res.json(updatedComplaint);
+      res.json(sanitizeComplaintForResponse(updatedComplaint, req.user.role));
     } else {
       res.status(404).json({ message: 'Complaint not found' });
     }
@@ -216,12 +506,9 @@ const updateComplaintPriority = async (req: any, res: Response) => {
   }
 };
 
-// @desc    Get all public complaints
-// @route   GET /api/complaints/public
-// @access  Private
 const getPublicComplaints = async (req: any, res: Response) => {
   try {
-    let complaints = await Complaint.find().select('-citizenId -citizenName');
+    const complaints = await Complaint.find().select('-citizenId -citizenName -internalNotes -auditLogs');
     res.json(complaints);
   } catch (error) {
     console.error(error);
@@ -229,9 +516,6 @@ const getPublicComplaints = async (req: any, res: Response) => {
   }
 };
 
-// @desc    Toggle upvote on a complaint
-// @route   PATCH /api/complaints/:id/upvote
-// @access  Private
 const toggleUpvote = async (req: any, res: Response) => {
   try {
     const complaint = await Complaint.findById(req.params.id);
@@ -246,44 +530,13 @@ const toggleUpvote = async (req: any, res: Response) => {
     );
 
     if (upvoteIndex === -1) {
-      // Add upvote
       complaint.upvotes.push(req.user._id);
     } else {
-      // Remove upvote
       complaint.upvotes.splice(upvoteIndex, 1);
     }
 
-    // Auto priority escalation
-    const upvoteCount = complaint.upvotes.length;
-    let newPriority = complaint.priority;
-
-    if (upvoteCount > 100) {
-      newPriority = 'CRITICAL';
-    } else if (upvoteCount > 50) {
-      newPriority = 'HIGH';
-    } else if (upvoteCount > 10) {
-      newPriority = 'MEDIUM';
-    } else {
-      newPriority = 'LOW';
-    }
-
-    if (newPriority !== complaint.priority) {
-      complaint.priority = newPriority;
-      complaint.timeline.push({
-        status: complaint.status,
-        message: `Priority updated to ${newPriority} based on community upvotes (${upvoteCount} votes)`,
-        updatedAt: new Date(),
-      });
-    }
-
     const updatedComplaint = await complaint.save();
-    
-    // Privacy rules for returning
-    const responseData = updatedComplaint.toObject() as any;
-    delete responseData.citizenId;
-    delete responseData.citizenName;
-
-    res.json(responseData);
+    res.json(sanitizeComplaintForResponse(updatedComplaint, req.user.role));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -294,7 +547,12 @@ export {
   createComplaint,
   getComplaints,
   getComplaintById,
+  updateComplaintStage,
   updateComplaintStatus,
+  submitFeedback,
+  reopenComplaint,
+  addInternalNote,
+  addComment,
   updateComplaintPriority,
   updateComplaintDepartment,
   getPublicComplaints,

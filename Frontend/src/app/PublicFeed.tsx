@@ -8,13 +8,22 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
 import { getFullImageUrl, calculateHaversineDistance } from '../lib/utils';
 
+const getLocationDisplay = (location: any): string => {
+  if (!location) return 'Location not specified';
+  if (typeof location === 'string') return location;
+  if (typeof location === 'object') {
+    return location.address || location.landmark || location.city || location.ward || 'Location provided';
+  }
+  return String(location);
+};
+
 export const PublicFeed: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [upvoting, setUpvoting] = useState<Record<string, boolean>>({});
-  const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
 
   useEffect(() => {
@@ -31,7 +40,7 @@ export const PublicFeed: React.FC = () => {
     fetchComplaints();
 
     // Get user's location
-    if ("geolocation" in navigator) {
+    if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setUserLocation({
@@ -52,23 +61,25 @@ export const PublicFeed: React.FC = () => {
   const handleUpvote = async (id: string) => {
     if (!user || upvoting[id]) return;
 
-    setUpvoting(prev => ({ ...prev, [id]: true }));
+    setUpvoting((prev) => ({ ...prev, [id]: true }));
 
     try {
       const updatedComplaint = await complaintApi.upvoteComplaint(id);
-      
-      setComplaints(prev => prev.map(c => {
-        if (c.id === id) {
-          return { ...c, upvotes: updatedComplaint.upvotes || [] };
-        }
-        return c;
-      }));
+
+      setComplaints((prev) =>
+        prev.map((c) => {
+          if (c.id === id || c._id === id) {
+            return { ...c, upvotes: updatedComplaint.upvotes || [] };
+          }
+          return c;
+        })
+      );
     } catch (error) {
       console.error('Failed to upvote:', error);
       const data = await complaintApi.getPublicComplaints();
       setComplaints(data.map((c: any) => ({ ...c, id: c._id || c.id })));
     } finally {
-      setUpvoting(prev => ({ ...prev, [id]: false }));
+      setUpvoting((prev) => ({ ...prev, [id]: false }));
     }
   };
 
@@ -77,18 +88,33 @@ export const PublicFeed: React.FC = () => {
 
     // If location is granted, filter by 25km
     if (userLocation) {
-      result = result.filter(c => {
+      result = result.filter((c) => {
         if (!c.latitude || !c.longitude) return false;
-        const distance = calculateHaversineDistance(userLocation.lat, userLocation.lng, c.latitude, c.longitude);
+        const distance = calculateHaversineDistance(
+          userLocation.lat,
+          userLocation.lng,
+          c.latitude,
+          c.longitude
+        );
         return distance <= 25;
       });
 
       // Sort by distance first then upvotes
       result.sort((a, b) => {
-        const distA = calculateHaversineDistance(userLocation.lat, userLocation.lng, a.latitude!, a.longitude!);
-        const distB = calculateHaversineDistance(userLocation.lat, userLocation.lng, b.latitude!, b.longitude!);
-        
-        if (Math.abs(distA - distB) > 0.1) { // 100m difference for distance priority
+        const distA = calculateHaversineDistance(
+          userLocation.lat,
+          userLocation.lng,
+          a.latitude!,
+          a.longitude!
+        );
+        const distB = calculateHaversineDistance(
+          userLocation.lat,
+          userLocation.lng,
+          b.latitude!,
+          b.longitude!
+        );
+
+        if (Math.abs(distA - distB) > 0.1) {
           return distA - distB;
         }
 
@@ -119,15 +145,19 @@ export const PublicFeed: React.FC = () => {
   return (
     <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       <header>
-        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">{t('publicFeed.title')}</h1>
-        <p className="text-zinc-500 mt-1 text-sm md:text-base">{t('publicFeed.subtitle')}</p>
-        
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">
+          {t('publicFeed.title')}
+        </h1>
+        <p className="text-zinc-500 mt-1 text-sm md:text-base">
+          {t('publicFeed.subtitle')}
+        </p>
+
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {userLocation ? (
-             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-xs md:text-sm font-bold shadow-sm">
-                <MapPin className="w-3.5 h-3.5 md:w-4 h-4" />
-                <span>Found {filteredAndSortedComplaints.length} issues within 25km</span>
-             </div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-xs md:text-sm font-bold shadow-sm">
+              <MapPin className="w-3.5 h-3.5 md:w-4 h-4" />
+              <span>Found {filteredAndSortedComplaints.length} issues within 25km</span>
+            </div>
           ) : (
             <div className="flex items-center gap-2 text-xs md:text-sm text-[#374151] bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 max-w-md w-full">
               <Info className="w-4 h-4 shrink-0" />
@@ -140,54 +170,73 @@ export const PublicFeed: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredAndSortedComplaints.map((complaint, i) => {
           const upvotes = complaint.upvotes || [];
-          const hasUpvoted = user ? upvotes.includes(user.id) : false;
-          
+          const complaintId = complaint.id || complaint._id || '';
+          const hasUpvoted = user ? upvotes.includes(user.id || user._id || '') : false;
+          const displayImage = complaint.media?.[0]?.url || complaint.imageUrl || '';
+          const displayStage = (complaint.workflowStage || complaint.status || 'SUBMITTED').toString();
+          const displayLocation = getLocationDisplay(complaint.location);
+          const displayCode = complaint.trackingCode || complaint.complaintCode || complaintId;
+
           return (
             <motion.div
-              key={complaint.id}
+              key={complaintId || i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
             >
               <Card className="h-full flex flex-col hover:shadow-lg transition-all duration-300">
-                <div className="aspect-video relative overflow-hidden">
-                  <img
-                    src={getFullImageUrl(complaint.imageUrl)}
-                    alt={complaint.title}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge variant={complaint.status}>{t(`common.${complaint.status.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`)}</Badge>
-                    <Badge variant={complaint.priority}>{t(`common.${complaint.priority.toLowerCase()}`)}</Badge>
+                <div className="aspect-video relative overflow-hidden bg-zinc-100">
+                  {displayImage ? (
+                    <img
+                      src={getFullImageUrl(displayImage)}
+                      alt={complaint.title}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-zinc-400 font-medium">
+                      No Image Available
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
+                    <Badge variant={displayStage}>{displayStage.replace(/_/g, ' ')}</Badge>
+                    {complaint.priority && <Badge variant={complaint.priority}>{complaint.priority}</Badge>}
                   </div>
+                  {displayCode && (
+                    <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-mono px-2 py-0.5 rounded font-bold backdrop-blur-sm">
+                      {displayCode}
+                    </div>
+                  )}
                 </div>
+
                 <div className="p-5 flex flex-col flex-1">
                   <h4 className="text-lg font-bold text-zinc-900 mb-2">{complaint.title}</h4>
                   <p className="text-sm text-zinc-600 mb-4 line-clamp-2">{complaint.description}</p>
-                  
+
                   <div className="mt-auto space-y-3">
                     <div className="flex items-center gap-2 text-[12px] text-zinc-500 font-medium">
-                      <MapPin className="w-4 h-4 text-[#000000]" />
-                      <span className="line-clamp-1">{complaint.location}</span>
+                      <MapPin className="w-4 h-4 text-[#000000] shrink-0" />
+                      <span className="line-clamp-1">{displayLocation}</span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between pt-4 border-t border-zinc-100">
                       <div className="flex items-center gap-1.5 text-xs text-zinc-400">
                         <Clock className="w-3.5 h-3.5" />
-                        {new Date(complaint.createdAt).toLocaleDateString()}
+                        {complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString() : 'N/A'}
                       </div>
-                      
-                      <button 
-                        onClick={() => handleUpvote(complaint.id)}
-                        disabled={upvoting[complaint.id]}
+
+                      <button
+                        onClick={() => handleUpvote(complaintId)}
+                        disabled={upvoting[complaintId]}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all ${
-                          hasUpvoted 
-                            ? 'bg-emerald-100 text-emerald-600 shadow-sm' 
+                          hasUpvoted
+                            ? 'bg-emerald-100 text-emerald-600 shadow-sm'
                             : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                        } ${upvoting[complaint.id] ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        } ${upvoting[complaintId] ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
-                        <ArrowUpCircle className={`w-4 h-4 ${hasUpvoted ? 'fill-emerald-200 text-emerald-600' : ''}`} />
+                        <ArrowUpCircle
+                          className={`w-4 h-4 ${hasUpvoted ? 'fill-emerald-200 text-emerald-600' : ''}`}
+                        />
                         {upvotes.length}
                       </button>
                     </div>

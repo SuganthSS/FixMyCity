@@ -22,7 +22,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const isAuthEndpoint = error.config?.url?.includes('/auth/login') ||
+                               error.config?.url?.includes('/auth/register') ||
+                               error.config?.url?.includes('/auth/google') ||
+                               error.config?.url?.includes('/auth/forgot-password') ||
+                               error.config?.url?.includes('/auth/reset-password');
+
+        if (error.response?.status === 401 && !isAuthEndpoint) {
             localStorage.removeItem('fixmycity_token');
             localStorage.removeItem('fixmycity_user');
             window.location.href = '/login';

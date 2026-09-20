@@ -8,11 +8,10 @@ import {
   Calendar,
   Clock,
   MoreVertical,
-  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useComplaints } from '../context/ComplaintContext';
-import { ComplaintStatus, ComplaintCategory } from '../types';
+import { WorkflowStage, ComplaintCategory } from '../types';
 import { Card, Badge, Button, Input } from '../components/UI';
 import { motion, AnimatePresence } from 'motion/react';
 import { getFullImageUrl } from '../lib/utils';
@@ -24,13 +23,23 @@ export const MyComplaintsPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const myComplaints = complaints.filter(c => c.citizenId === user?.id);
+  const myComplaints = complaints.filter(
+    (c) =>
+      c.citizenId === user?.id ||
+      c.citizenId === user?._id ||
+      (c.citizenId as any)?._id === user?.id
+  );
 
-  const filteredComplaints = myComplaints.filter(c => {
-    const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
+  const filteredComplaints = myComplaints.filter((c) => {
+    const stage = c.workflowStage || c.status;
+    const tracking = c.trackingCode || c.complaintCode || c.id || c._id || '';
+
+    const matchesStatus = statusFilter === 'ALL' || stage === statusFilter;
     const matchesCategory = categoryFilter === 'ALL' || c.category === categoryFilter;
-    const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.id.includes(searchQuery);
+    const matchesSearch =
+      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tracking.toLowerCase().includes(searchQuery.toLowerCase());
+
     return matchesStatus && matchesCategory && matchesSearch;
   });
 
@@ -58,22 +67,22 @@ export const MyComplaintsPage: React.FC = () => {
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <Input
-            placeholder="Search by title or ID..."
+            placeholder="Search by title or Tracking Code (FMC-YYYY-XXXX)..."
             className="pl-10 h-11"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-40">
+          <div className="relative flex-1 md:w-48">
             <select
               className="w-full h-11 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#F27D26]/20"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="ALL">All Statuses</option>
-              {Object.values(ComplaintStatus).map(s => (
-                <option key={s} value={s}>{s.replace('_', ' ')}</option>
+              <option value="ALL">All Workflow Stages</option>
+              {Object.values(WorkflowStage).map((s) => (
+                <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
               ))}
             </select>
           </div>
@@ -84,7 +93,7 @@ export const MyComplaintsPage: React.FC = () => {
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
               <option value="ALL">All Categories</option>
-              {Object.values(ComplaintCategory).map(c => (
+              {Object.values(ComplaintCategory).map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
@@ -98,80 +107,95 @@ export const MyComplaintsPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredComplaints.length > 0 ? (
-            filteredComplaints.map((complaint, i) => (
-              <motion.div
-                key={complaint.id}
-                layout
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <Link to={`/complaint/${complaint.id}`}>
-                  <Card className="p-4 hover:border-[#F27D26]/30 hover:shadow-md transition-all group">
-                    <div className="flex flex-col md:flex-row gap-6 items-center">
-                      <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden shrink-0">
-                        <img
-                          src={getFullImageUrl(complaint.imageUrl)}
-                          alt={complaint.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
+            filteredComplaints.map((complaint, i) => {
+              const displayCode = complaint.trackingCode || complaint.complaintCode || complaint.id || complaint._id || '';
+              const displayStage = (complaint.workflowStage || complaint.status || 'SUBMITTED').toString();
+              const displayImage = complaint.media?.[0]?.url || complaint.imageUrl || '';
 
-                      <div className="flex-1 space-y-3 w-full">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant={complaint.status}>{complaint.status.replace('_', ' ')}</Badge>
-                              <Badge variant={complaint.priority}>{complaint.priority}</Badge>
-                            </div>
-                            <h3 className="text-lg font-bold text-zinc-900 group-hover:text-[#F27D26] transition-colors">
-                              {complaint.title}
-                            </h3>
-                          </div>
-                          <span className="text-xs font-mono text-zinc-400 bg-zinc-50 px-2 py-1 rounded">#{complaint.id}</span>
+              return (
+                <motion.div
+                  key={complaint.id || complaint._id || i}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Link to={`/complaint/${complaint.id || complaint._id}`}>
+                    <Card className="p-4 hover:border-[#F27D26]/30 hover:shadow-md transition-all group">
+                      <div className="flex flex-col md:flex-row gap-6 items-center">
+                        <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden shrink-0 bg-zinc-100 flex items-center justify-center">
+                          {displayImage ? (
+                            <img
+                              src={getFullImageUrl(displayImage)}
+                              alt={complaint.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <span className="text-xs text-zinc-400 font-medium">No Image</span>
+                          )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-zinc-500 font-medium">
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-zinc-100 rounded-lg">
-                              <Filter className="w-3 h-3" />
+                        <div className="flex-1 space-y-3 w-full">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant={displayStage}>{displayStage.replace(/_/g, ' ')}</Badge>
+                                <Badge variant={complaint.priority}>{complaint.priority}</Badge>
+                              </div>
+                              <h3 className="text-lg font-bold text-zinc-900 group-hover:text-[#F27D26] transition-colors">
+                                {complaint.title}
+                              </h3>
                             </div>
-                            {complaint.category}
+                            <span className="text-xs font-mono font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded">
+                              {displayCode}
+                            </span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-zinc-100 rounded-lg">
-                              <MapPin className="w-3 h-3" />
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-zinc-500 font-medium">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 bg-zinc-100 rounded-lg">
+                                <Filter className="w-3 h-3" />
+                              </div>
+                              {complaint.category}
+                              {complaint.subCategory && ` (${complaint.subCategory})`}
                             </div>
-                            <span className="truncate">{complaint.location}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-zinc-100 rounded-lg">
-                              <Calendar className="w-3 h-3" />
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 bg-zinc-100 rounded-lg">
+                                <MapPin className="w-3 h-3" />
+                              </div>
+                              <span className="truncate">
+                                {typeof complaint.location === 'string' ? complaint.location : complaint.location?.address || 'Location provided'}
+                              </span>
                             </div>
-                            {new Date(complaint.createdAt).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-zinc-100 rounded-lg">
-                              <Clock className="w-3 h-3" />
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 bg-zinc-100 rounded-lg">
+                                <Calendar className="w-3 h-3" />
+                              </div>
+                              {new Date(complaint.createdAt).toLocaleDateString()}
                             </div>
-                            Last updated: {new Date(complaint.updatedAt).toLocaleDateString()}
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 bg-zinc-100 rounded-lg">
+                                <Clock className="w-3 h-3" />
+                              </div>
+                              Last updated: {new Date(complaint.updatedAt).toLocaleDateString()}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="rounded-full">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                        <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[#F27D26] group-hover:translate-x-1 transition-all" />
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="icon" className="rounded-full">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                          <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[#F27D26] group-hover:translate-x-1 transition-all" />
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))
+                    </Card>
+                  </Link>
+                </motion.div>
+              );
+            })
           ) : (
             <div className="text-center py-20 bg-zinc-50 rounded-3xl border-2 border-dashed border-zinc-200">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
@@ -179,7 +203,15 @@ export const MyComplaintsPage: React.FC = () => {
               </div>
               <h3 className="text-lg font-bold text-zinc-900">No complaints found</h3>
               <p className="text-zinc-500 mt-1">Try adjusting your filters or report a new issue.</p>
-              <Button variant="outline" className="mt-6" onClick={() => { setStatusFilter('ALL'); setCategoryFilter('ALL'); setSearchQuery(''); }}>
+              <Button
+                variant="outline"
+                className="mt-6"
+                onClick={() => {
+                  setStatusFilter('ALL');
+                  setCategoryFilter('ALL');
+                  setSearchQuery('');
+                }}
+              >
                 Clear All Filters
               </Button>
             </div>

@@ -86,15 +86,24 @@ export const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ c
 export const Badge: React.FC<{ children: React.ReactNode; variant?: string; className?: string }> = ({ children, variant, className }) => {
   const variants: Record<string, string> = {
     SUBMITTED: 'bg-amber-50 text-amber-700 border border-amber-100/50',
+    TRIAGED: 'bg-sky-50 text-sky-700 border border-sky-100/50',
+    DEPT_ASSIGNED: 'bg-blue-50 text-blue-700 border border-blue-100/50',
+    STAFF_ASSIGNED: 'bg-indigo-50 text-indigo-700 border border-indigo-100/50',
+    IN_PROGRESS: 'bg-purple-100/50 text-purple-700 border border-purple-200/50',
+    WAITING_FOR_CITIZEN: 'bg-orange-50 text-orange-700 border border-orange-100/50',
+    RESOLVED: 'bg-emerald-50 text-emerald-600 border border-emerald-100/50',
+    CLOSED: 'bg-slate-100 text-slate-700 border border-slate-200',
+    REJECTED: 'bg-rose-50 text-rose-600 border border-rose-100/50',
+    REOPENED: 'bg-amber-100 text-amber-800 border border-amber-300 font-bold',
     UNDER_REVIEW: 'bg-violet-50 text-violet-600 border border-violet-100/50',
     ASSIGNED: 'bg-indigo-50 text-indigo-600 border border-indigo-100/50',
-    IN_PROGRESS: 'bg-purple-100/50 text-purple-700 border border-purple-200/50',
-    RESOLVED: 'bg-emerald-50 text-emerald-600 border border-emerald-100/50',
-    REJECTED: 'bg-rose-50 text-rose-600 border border-rose-100/50',
+    EXTREME: 'bg-red-600 text-white font-bold shadow-sm',
+    SEVERE: 'bg-rose-100 text-rose-800 font-bold',
+    MODERATE: 'bg-amber-100 text-amber-800 font-medium',
+    CRITICAL: 'bg-rose-600 text-white shadow-premium font-bold',
     HIGH: 'bg-rose-50 text-rose-600 font-bold border border-rose-100/50',
     MEDIUM: 'bg-amber-50 text-amber-600 border border-amber-100/50',
     LOW: 'bg-emerald-50 text-emerald-600 border border-emerald-100/50',
-    URGENT: 'bg-rose-600 text-white shadow-premium font-bold',
   };
 
   return (

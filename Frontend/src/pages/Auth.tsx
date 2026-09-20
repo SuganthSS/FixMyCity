@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AlertCircle, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AlertCircle, Mail, Lock, User, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import { authApi } from '../services/authApi';
 import { UserRole } from '../types';
 import { Button, Input, Label, Card } from '../components/UI';
 import { useTranslation } from 'react-i18next';
@@ -34,18 +35,27 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, loginWithGoogle } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError(null);
-    const result = await login(email, password);
-    if (result.success) {
-      handleRedirect(navigate, result.role);
-    } else {
-      setError(result.message || 'Login failed');
+    setIsSubmitting(true);
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        handleRedirect(navigate, result.role);
+      } else {
+        setError(result.message || 'Login failed');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -103,7 +113,7 @@ export const LoginPage: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
                 <Label htmlFor="password">{t('common.password')}</Label>
-                <button type="button" className="text-xs font-semibold text-[#000000] hover:underline">{t('common.forgotPassword')}</button>
+                <Link to="/forgot-password" className="text-xs font-semibold text-slate-900 hover:underline">{t('common.forgotPassword')}</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -131,8 +141,8 @@ export const LoginPage: React.FC = () => {
               <label htmlFor="remember" className="ml-2 text-sm text-zinc-600">{t('common.rememberMe')}</label>
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base">
-              {t('common.signIn')}
+            <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-base">
+              {isSubmitting ? 'Signing in...' : t('common.signIn')}
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </form>
@@ -366,6 +376,235 @@ export const RegisterPage: React.FC = () => {
           {t('common.alreadyAccount')}{' '}
           <Link to="/login" className="font-bold text-[#000000] hover:underline">{t('common.login')}</Link>
         </p>
+      </motion.div>
+    </div>
+  );
+};
+
+export const ForgotPasswordPage: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { t } = useTranslation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await authApi.forgotPassword(email);
+    } catch (err) {
+      console.error('Forgot password error:', err);
+    } finally {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6 pt-24">
+      <AuthHeader />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-10 flex flex-col items-center">
+          <Logo variant="vertical" iconSize="w-16 h-16" textSize="text-4xl" />
+          <h1 className="text-3xl font-bold text-zinc-900 mt-6">Forgot Password</h1>
+          <p className="text-zinc-500 mt-2">Enter your registered email to receive a reset link</p>
+        </div>
+
+        <Card className="p-8 shadow-xl shadow-zinc-200/50 border-zinc-100">
+          {isSubmitted ? (
+            <div className="text-center space-y-4 py-4">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Check Your Inbox</h3>
+              <p className="text-sm text-slate-600">
+                If an account exists with that email, a reset link has been sent.
+              </p>
+              <Link to="/login">
+                <Button variant="outline" className="w-full mt-4">
+                  Return to Sign In
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="email">{t('common.email')}</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-base">
+                {isSubmitting ? 'Sending Link...' : 'Send Reset Link'}
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </form>
+          )}
+        </Card>
+
+        <p className="text-center mt-8 text-sm text-zinc-600">
+          Remembered your password?{' '}
+          <Link to="/login" className="font-bold text-[#000000] hover:underline">Sign In</Link>
+        </p>
+      </motion.div>
+    </div>
+  );
+};
+
+export const ResetPasswordPage: React.FC = () => {
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (!token) {
+      setError('Invalid or missing password reset token.');
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const res = await authApi.resetPassword(token, newPassword);
+      if (res.success) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else {
+        setError(res.message || 'Failed to reset password.');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid or expired password reset token.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6 pt-24">
+      <AuthHeader />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-10 flex flex-col items-center">
+          <Logo variant="vertical" iconSize="w-16 h-16" textSize="text-4xl" />
+          <h1 className="text-3xl font-bold text-zinc-900 mt-6">Reset Password</h1>
+          <p className="text-zinc-500 mt-2">Enter your new password below</p>
+        </div>
+
+        <Card className="p-8 shadow-xl shadow-zinc-200/50 border-zinc-100">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-red-600 text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <p>{error}</p>
+            </div>
+          )}
+
+          {isSuccess ? (
+            <div className="text-center space-y-4 py-4">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Password Reset Successful!</h3>
+              <p className="text-sm text-slate-600">
+                Your password has been reset. Redirecting you to sign in...
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="newPassword">New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Input
+                    id="newPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirm ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                  >
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-base">
+                {isSubmitting ? 'Resetting Password...' : 'Reset Password'}
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </form>
+          )}
+        </Card>
       </motion.div>
     </div>
   );

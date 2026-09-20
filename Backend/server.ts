@@ -9,6 +9,7 @@ import notificationRoutes from './server/routes/notificationRoutes.ts';
 import messageRoutes from './server/routes/messages.ts';
 import ticketRoutes from './server/routes/ticketRoutes.ts';
 import hodRoutes from './server/routes/hodRoutes.ts';
+import testRoutes from './server/routes/testRoutes.ts';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -24,6 +25,8 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
+import { checkSmtpStatus } from './server/services/emailService.ts';
+
 async function startServer() {
   // Connect to MongoDB
   await connectDB();
@@ -35,6 +38,7 @@ async function startServer() {
   app.use(cors({
     origin: process.env.FRONTEND_URL || [
       'http://localhost:3000',
+      'http://localhost:5173',
       'https://fix-my-city-nu.vercel.app'
     ],
     credentials: true,
@@ -53,6 +57,7 @@ async function startServer() {
   app.use('/api/messages', messageRoutes);
   app.use('/api/tickets', ticketRoutes);
   app.use('/api/hod', hodRoutes);
+  app.use('/api/test', testRoutes);
 
   // Health check
   app.get('/api/health', (req, res) => {
@@ -61,6 +66,7 @@ async function startServer() {
 
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    checkSmtpStatus();
   });
 }
 

@@ -4,14 +4,16 @@ import { getFullImageUrl } from '../lib/utils';
 import { useTranslation } from 'react-i18next';
 import { Card, Button, Input, Label } from '../components/UI';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Shield, Calendar, Camera, Save, X } from 'lucide-react';
+import { User, Mail, Shield, Calendar, Camera, Save, X, Lock } from 'lucide-react';
 
 import { Link } from 'react-router-dom';
+import { ChangePasswordModal } from './SecurityPages';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || ''
@@ -115,11 +117,15 @@ export const ProfilePage: React.FC = () => {
                 <Calendar className="w-3 h-3" /> {t('profile.accountCreated')}
               </label>
               <p className="text-sm font-semibold text-zinc-900">
-                {new Date(user.createdAt).toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
+                {user.createdAt ? (
+                  new Date(user.createdAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })
+                ) : (
+                  'N/A'
+                )}
               </p>
             </div>
           </div>
@@ -132,9 +138,9 @@ export const ProfilePage: React.FC = () => {
                   <p className="text-sm font-bold text-zinc-900">{t('profile.changePass')}</p>
                   <p className="text-xs text-zinc-500">{t('profile.changePassDesc')}</p>
                 </div>
-                <Link to="/change-password">
-                  <Button variant="outline" size="sm">{t('common.update')}</Button>
-                </Link>
+                <Button variant="outline" size="sm" onClick={() => setIsChangePasswordOpen(true)}>
+                  {t('common.update')}
+                </Button>
               </div>
               <div className="flex items-center justify-between p-4 bg-zinc-50 rounded-2xl">
                 <div>
@@ -149,6 +155,11 @@ export const ProfilePage: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {/* Change Password Modal */}
+      {isChangePasswordOpen && (
+        <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
+      )}
     </div>
   );
 };

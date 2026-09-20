@@ -5,6 +5,7 @@ export interface LoginResponse {
     name: string;
     email: string;
     role: string;
+    createdAt?: string;
     token: string;
 }
 
@@ -13,6 +14,7 @@ export interface RegisterResponse {
     name: string;
     email: string;
     role: string;
+    createdAt?: string;
     token: string;
 }
 
@@ -34,6 +36,24 @@ export const authApi = {
 
     getProfile: async () => {
         const { data } = await api.get('/auth/profile');
+        return data;
+    },
+
+    changePassword: async (currentPassword: string, newPassword: string) => {
+        const { data } = await api.post<{ success: boolean; message: string }>('/auth/change-password', {
+            currentPassword,
+            newPassword,
+        });
+        return data;
+    },
+
+    forgotPassword: async (email: string) => {
+        const { data } = await api.post<{ success: boolean; message: string }>('/auth/forgot-password', { email });
+        return data;
+    },
+
+    resetPassword: async (token: string, newPassword: string) => {
+        const { data } = await api.post<{ success: boolean; message: string }>(`/auth/reset-password/${token}`, { newPassword });
         return data;
     },
 };

@@ -8,7 +8,7 @@ import {
 import { useAuth } from './context/AuthContext';
 import { UserRole } from './types';
 import { Sidebar, Navbar } from './components/Layout';
-import { LoginPage, RegisterPage } from './pages/Auth';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from './pages/Auth';
 import { CitizenDashboard } from './app/CitizenDashboard';
 import { PublicFeed } from './app/PublicFeed';
 import { ReportIssuePage } from './app/ReportIssue';
@@ -53,8 +53,19 @@ const getDashboardRoute = (role?: UserRole) => {
 };
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; role?: UserRole }> = ({ children, role }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#F9FAFB]">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-500">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -68,7 +79,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; role?: UserRole }> =
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#F9FAFB]">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-500">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
     return <Navigate to={getDashboardRoute(user?.role)} replace />;
@@ -104,6 +126,8 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         
         {/* Citizen Routes */}
         <Route path="/dashboard" element={
