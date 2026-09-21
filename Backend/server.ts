@@ -64,9 +64,9 @@ async function startServer() {
     res.json({ status: 'ok', message: 'FixMyCity Backend is running' });
   });
 
-  app.listen(PORT, () => {
+  app.listen(PORT, async () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    checkSmtpStatus();
+    await checkSmtpStatus();
   });
 }
 

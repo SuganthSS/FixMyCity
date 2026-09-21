@@ -77,7 +77,7 @@ async function runEndToEndAudit() {
       statusHistory: [{ stage: 'SUBMITTED', status: 'SUBMITTED', message: 'Complaint submitted', updatedBy: citizen._id }],
     });
 
-    if (testComplaint.trackingCode.startsWith(`FMC-${currentYear}-`) && testComplaint.media.length === 3 && testComplaint.subCategory === 'Pothole') {
+    if (testComplaint.trackingCode?.startsWith(`FMC-${currentYear}-`) && testComplaint.media.length === 3 && testComplaint.subCategory === 'Pothole') {
       auditResults.push({ name: '1. Citizen Flow Creation', status: 'PASS', details: `Generated Tracking Code: ${testComplaint.trackingCode}, Media Count: 3, SubCategory: Pothole` });
     } else {
       auditResults.push({ name: '1. Citizen Flow Creation', status: 'FAIL', details: 'Tracking code or media array invalid' });

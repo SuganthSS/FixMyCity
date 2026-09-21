@@ -1,33 +1,56 @@
 import nodemailer from 'nodemailer';
 
-// Helper: Get Gmail SMTP transporter using process.env
+/**
+ * Creates Nodemailer transporter configured for Brevo SMTP.
+ */
 const getTransporter = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASSWORD;
+  const host = process.env.SMTP_HOST || 'smtp-relay.brevo.com';
+  const port = Number(process.env.SMTP_PORT) || 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
 
   if (!user || !pass) {
     return null;
   }
 
   return nodemailer.createTransport({
-    service: 'gmail',
+    host,
+    port,
+    secure: false, // 587 uses STARTTLS
     auth: {
       user,
       pass,
     },
+    connectionTimeout: 10000, // 10s connection timeout
+    greetingTimeout: 10000,   // 10s greeting timeout
+    socketTimeout: 10000,     // 10s socket timeout
   });
 };
 
 /**
- * Startup check helper to log SMTP status.
+ * Startup check helper to log Brevo SMTP status.
+ * Uses transporter.verify() to check connection health if configured.
  */
-export const checkSmtpStatus = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASSWORD;
-  if (user && pass) {
-    console.log('✓ Gmail SMTP configured');
-  } else {
-    console.warn('⚠ Gmail SMTP not configured (Missing EMAIL_USER or EMAIL_PASSWORD)');
+export const checkSmtpStatus = async () => {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    console.warn('⚠ Brevo SMTP not configured');
+    return;
+  }
+
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn('⚠ Brevo SMTP not configured');
+    return;
+  }
+
+  try {
+    await transporter.verify();
+    console.log('✓ Brevo SMTP configured');
+  } catch (error: any) {
+    console.warn('⚠ Brevo SMTP connection failed:', error.message || error);
   }
 };
 
@@ -40,35 +63,42 @@ export interface SendEmailOptions {
 
 /**
  * Core sendEmail helper.
- * Sends emails via Gmail SMTP (Nodemailer) or logs gracefully when credentials are missing.
+ * Sends emails via Brevo SMTP (Nodemailer) with timeout protection & graceful failure handling.
  */
 export const sendEmail = async ({ to, subject, html, from }: SendEmailOptions) => {
   const transporter = getTransporter();
-  const sender = from || process.env.EMAIL_USER || 'FixMyCity <no-reply@fixmycity.org>';
+  const sender = from || process.env.EMAIL_FROM || 'FixMyCity <no-reply@fixmycity.org>';
 
   if (!transporter) {
-    console.warn('[emailService] Gmail SMTP is not configured. Email dispatch logged in fallback mode:');
+    console.warn('[emailService] Brevo SMTP is not configured. Email dispatch logged in fallback mode:');
     console.warn(`[emailService] To: ${Array.isArray(to) ? to.join(', ') : to}`);
     console.warn(`[emailService] Subject: ${subject}`);
     return {
       success: true,
       simulated: true,
-      message: 'Email dispatch simulated (Gmail SMTP not configured).',
+      message: 'Email dispatch simulated (Brevo SMTP not configured).',
     };
   }
 
   try {
-    const info = await transporter.sendMail({
+    // 10 second timeout promise wrapper to protect against long hangs
+    const sendPromise = transporter.sendMail({
       from: sender,
       to,
       subject,
       html,
     });
 
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Email dispatch timed out after 10 seconds')), 10000)
+    );
+
+    const info: any = await Promise.race([sendPromise, timeoutPromise]);
+
     console.log(`[emailService] Email sent successfully to ${to} (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
-    console.error('[emailService] Failed to send email via Gmail SMTP:', error);
+    console.error('[emailService] Failed to send email via Brevo SMTP:', error.message || error);
     return { success: false, error: error.message || error };
   }
 };
