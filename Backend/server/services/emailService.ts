@@ -206,7 +206,34 @@ const getBaseTemplate = (title: string, bodyContent: string) => `
 `;
 
 /**
- * 1. Welcome Email Template
+ * 1. Email Verification Email Template
+ */
+export const sendEmailVerificationEmail = async ({ email, name, verificationToken }: { email: string; name: string; verificationToken: string }) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
+  const subject = 'Verify Your FixMyCity Email Address';
+  const html = getBaseTemplate(
+    subject,
+    `
+    <h1 class="h1">Welcome to FixMyCity, ${name}!</h1>
+    <p class="p">Please verify your email address to complete your registration and activate your account.</p>
+    <p class="p">Click the button below to verify your email. This link will expire in <strong>24 hours</strong>.</p>
+    <div style="text-align: center;">
+      <a href="${verifyUrl}" class="btn">Verify Email Address</a>
+    </div>
+    <p class="p">If you did not create a FixMyCity account, you can safely ignore this email.</p>
+    <p class="p" style="font-size: 13px; color: #94a3b8; word-break: break-all;">
+      Or copy and paste this link into your browser:<br/>
+      <a href="${verifyUrl}">${verifyUrl}</a>
+    </p>
+    `
+  );
+
+  return sendEmail({ to: email, subject, html });
+};
+
+/**
+ * 2. Welcome Email Template
  */
 export const sendWelcomeEmail = async (email: string, name: string) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';

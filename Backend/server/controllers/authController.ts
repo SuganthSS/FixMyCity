@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.ts';
-import { sendPasswordResetEmail } from '../services/emailService.ts';
+import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/emailService.ts';
 
 // Generate JWT
 const generateToken = (id: string) => {
@@ -19,29 +19,48 @@ const generateToken = (id: string) => {
 const registerUser = async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
 
-  const userExists = await User.findOne({ email });
+  const normalizedEmail = email ? email.toLowerCase().trim() : '';
+
+  const userExists = await User.findOne({ email: normalizedEmail });
 
   if (userExists) {
     res.status(400).json({ message: 'User already exists' });
     return;
   }
 
+  // Generate unhashed verification token for email link
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  // Store SHA-256 hash of token in MongoDB
+  const hashedVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+
   const user = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     password,
     role: role || 'citizen',
     isApproved: role === 'staff' ? false : true,
+    isEmailVerified: false,
+    emailVerificationToken: hashedVerificationToken,
+    emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours expiry
   });
 
   if (user) {
+    // Send email containing unhashed verification token
+    await sendEmailVerificationEmail({
+      email: user.email,
+      name: user.name,
+      verificationToken,
+    });
+
     res.status(201).json({
+      success: true,
+      message: "We've sent a verification email to your inbox. Please verify your email before signing in.",
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      isEmailVerified: false,
       createdAt: user.createdAt,
-      token: generateToken(user._id.toString()),
     });
   } else {
     res.status(400).json({ message: 'Invalid user data' });
@@ -54,7 +73,8 @@ const registerUser = async (req: Request, res: Response) => {
 const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  const user: any = await User.findOne({ email }).select('+password');
+  const normalizedEmail = email ? email.toLowerCase().trim() : '';
+  const user: any = await User.findOne({ email: normalizedEmail }).select('+password');
 
   let isMatch = false;
   if (user && user.password) {
@@ -64,17 +84,29 @@ const loginUser = async (req: Request, res: Response) => {
   if (user && isMatch) {
     // Check if user is banned
     if (user.isBanned) {
-      res.status(403).json({ message: 'Your account has been restricted. Contact administrator.' });
+      res.status(403).json({ success: false, message: 'Your account has been restricted. Contact administrator.' });
+      return;
+    }
+
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      res.status(403).json({
+        success: false,
+        message: 'Please verify your email before signing in.',
+        isEmailVerified: false,
+        email: user.email,
+      });
       return;
     }
 
     // Check if staff or HOD is approved
     if ((user.role === 'staff' || user.role === 'hod') && !user.isApproved) {
-      res.status(403).json({ message: 'Your account is pending admin approval.' });
+      res.status(403).json({ success: false, message: 'Your account is pending admin approval.' });
       return;
     }
 
     res.json({
+      success: true,
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -84,7 +116,7 @@ const loginUser = async (req: Request, res: Response) => {
       token: generateToken(user._id.toString()),
     });
   } else {
-    res.status(401).json({ message: 'Invalid email or password' });
+    res.status(401).json({ success: false, message: 'Invalid email or password' });
   }
 };
 
@@ -114,26 +146,33 @@ const googleLogin = async (req: Request, res: Response) => {
     }
 
     const { email, name, picture, sub } = payload;
+    const normalizedEmail = email.toLowerCase().trim();
 
     // Match existing user strictly by email
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      // Force role = "citizen" for new Google OAuth users
+      // Force role = "citizen" and auto-verify email for new Google OAuth users
       user = await User.create({
         name: name || 'Google User',
-        email,
+        email: normalizedEmail,
         googleId: sub,
         avatar: picture || null,
         authProvider: 'google',
         role: 'citizen',
         isApproved: true,
+        isEmailVerified: true,
       });
-    } else if (user.authProvider !== 'google' && !user.googleId) {
-      // Auto-link Google account details to existing account without touching role, department, or approval status
-      user.googleId = sub;
-      user.avatar = picture || user.avatar;
-      user.authProvider = 'google';
+    } else {
+      if (user.authProvider !== 'google' && !user.googleId) {
+        user.googleId = sub;
+        user.avatar = picture || user.avatar;
+        user.authProvider = 'google';
+      }
+      // Google authenticated users have verified email via Google
+      if (!user.isEmailVerified) {
+        user.isEmailVerified = true;
+      }
       await user.save();
     }
 
@@ -150,6 +189,7 @@ const googleLogin = async (req: Request, res: Response) => {
     }
 
     res.json({
+      success: true,
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -162,6 +202,92 @@ const googleLogin = async (req: Request, res: Response) => {
     console.error('Google Auth Error:', error);
     res.status(401).json({ message: 'Google authentication failed. Invalid token.' });
   }
+};
+
+// @desc    Verify email address using verification token
+// @route   GET /api/auth/verify-email/:token
+// @access  Public
+const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.params;
+
+  if (!token) {
+    res.status(400).json({
+      success: false,
+      message: 'Verification token is required.',
+    });
+    return;
+  }
+
+  // Hash incoming token to match stored database hash
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  // Find user with matching token and valid expiry
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: { $gt: new Date() },
+  }).select('+emailVerificationToken +emailVerificationExpires');
+
+  if (!user) {
+    res.status(400).json({
+      success: false,
+      message: 'Invalid or expired email verification token.',
+    });
+    return;
+  }
+
+  // Update verification status and clear token fields
+  user.isEmailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Email verified successfully! You can now log in.',
+  });
+};
+
+// @desc    Resend email verification token
+// @route   POST /api/auth/resend-verification
+// @access  Public
+const resendVerification = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  const genericResponse = {
+    success: true,
+    message: "If an unverified account exists with that email, a new verification link has been sent.",
+  };
+
+  if (!email) {
+    res.json(genericResponse);
+    return;
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ email: normalizedEmail });
+
+  // If user does not exist or is already verified, return generic response to prevent user enumeration
+  if (!user || user.isEmailVerified) {
+    res.json(genericResponse);
+    return;
+  }
+
+  // Generate new token and 24-hour expiry
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  const hashedVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+
+  user.emailVerificationToken = hashedVerificationToken;
+  user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await user.save();
+
+  // Send verification email
+  await sendEmailVerificationEmail({
+    email: user.email,
+    name: user.name,
+    verificationToken,
+  });
+
+  res.json(genericResponse);
 };
 
 // @desc    Get user profile
@@ -322,4 +448,15 @@ const resetPassword = async (req: Request, res: Response) => {
   });
 };
 
-export { registerUser, loginUser, googleLogin, getUserProfile, changePassword, forgotPassword, resetPassword };
+export {
+  registerUser,
+  loginUser,
+  googleLogin,
+  verifyEmail,
+  resendVerification,
+  getUserProfile,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+};
+

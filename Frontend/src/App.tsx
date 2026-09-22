@@ -8,7 +8,7 @@ import {
 import { useAuth } from './context/AuthContext';
 import { UserRole } from './types';
 import { Sidebar, Navbar } from './components/Layout';
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from './pages/Auth';
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from './pages/Auth';
 import { CitizenDashboard } from './app/CitizenDashboard';
 import { PublicFeed } from './app/PublicFeed';
 import { ReportIssuePage } from './app/ReportIssue';
@@ -126,6 +126,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         

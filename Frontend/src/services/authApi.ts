@@ -10,12 +10,14 @@ export interface LoginResponse {
 }
 
 export interface RegisterResponse {
+    success?: boolean;
+    message?: string;
     _id: string;
     name: string;
     email: string;
     role: string;
     createdAt?: string;
-    token: string;
+    token?: string;
 }
 
 export const authApi = {
@@ -54,6 +56,16 @@ export const authApi = {
 
     resetPassword: async (token: string, newPassword: string) => {
         const { data } = await api.post<{ success: boolean; message: string }>(`/auth/reset-password/${token}`, { newPassword });
+        return data;
+    },
+
+    verifyEmail: async (token: string) => {
+        const { data } = await api.get<{ success: boolean; message: string }>(`/auth/verify-email/${token}`);
+        return data;
+    },
+
+    resendVerification: async (email: string) => {
+        const { data } = await api.post<{ success: boolean; message: string }>('/auth/resend-verification', { email });
         return data;
     },
 };

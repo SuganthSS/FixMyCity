@@ -35,6 +35,9 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, loginWithGoogle } = useAuth();
   const { t } = useTranslation();
@@ -44,6 +47,8 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     if (isSubmitting) return;
     setError(null);
+    setIsUnverified(false);
+    setResendStatus(null);
     setIsSubmitting(true);
     try {
       const result = await login(email, password);
@@ -51,17 +56,39 @@ export const LoginPage: React.FC = () => {
         handleRedirect(navigate, result.role);
       } else {
         setError(result.message || 'Login failed');
+        if (result.message && result.message.includes('verify your email')) {
+          setIsUnverified(true);
+        }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      const errMsg = err.response?.data?.message || 'Login failed. Please check your credentials.';
+      setError(errMsg);
+      if (errMsg.includes('verify your email')) {
+        setIsUnverified(true);
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email || isResending) return;
+    setIsResending(true);
+    setResendStatus(null);
+    try {
+      await authApi.resendVerification(email);
+      setResendStatus("A new verification link has been sent to your email inbox.");
+    } catch (err: any) {
+      setResendStatus(err.response?.data?.message || "Failed to resend verification email.");
+    } finally {
+      setIsResending(false);
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (credentialResponse.credential) {
       setError(null);
+      setIsUnverified(false);
       const result = await loginWithGoogle(credentialResponse.credential);
       if (result.success) {
         handleRedirect(navigate, result.role);
@@ -87,9 +114,27 @@ export const LoginPage: React.FC = () => {
 
         <Card className="p-8 shadow-xl shadow-zinc-200/50 border-zinc-100">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-red-600 text-sm">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <p>{error}</p>
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3 text-amber-800 text-sm">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" />
+                <p className="font-medium">{error}</p>
+              </div>
+              {isUnverified && (
+                <div className="pt-2 border-t border-amber-200/60 flex flex-col items-start gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResendVerification}
+                    disabled={isResending}
+                    className="w-full text-xs font-semibold bg-white border-amber-300 text-amber-900 hover:bg-amber-100"
+                  >
+                    {isResending ? 'Sending...' : 'Resend Verification Email'}
+                  </Button>
+                  {resendStatus && (
+                    <p className="text-xs text-amber-900 font-medium">{resendStatus}</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -185,6 +230,7 @@ export const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [isRegistered, setIsRegistered] = useState(false);
   const { register, loginWithGoogle } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -212,10 +258,8 @@ export const RegisterPage: React.FC = () => {
     if (result.success) {
       if (role === UserRole.STAFF) {
         setMessage({ type: 'success', text: result.message || 'Account created. Pending approval.' });
-      } else if (role === UserRole.ADMIN) {
-        navigate('/admin/dashboard');
       } else {
-        navigate('/dashboard');
+        setIsRegistered(true);
       }
     } else {
       setMessage({ type: 'error', text: result.message || 'Registration failed' });
@@ -232,150 +276,257 @@ export const RegisterPage: React.FC = () => {
       >
         <div className="text-center mb-10 flex flex-col items-center">
           <Logo variant="vertical" iconSize="w-16 h-16" textSize="text-4xl" />
-          <h1 className="text-3xl font-bold text-zinc-900 mt-6">{t('common.createAccount')}</h1>
-          <p className="text-zinc-500 mt-2">{t('auth.createAccountDesc')}</p>
+          <h1 className="text-3xl font-bold text-zinc-900 mt-6">{isRegistered ? 'Account Created Successfully' : t('common.createAccount')}</h1>
+          <p className="text-zinc-500 mt-2">{isRegistered ? 'Please check your inbox to verify your email address' : t('auth.createAccountDesc')}</p>
         </div>
 
         <Card className="p-8 shadow-xl shadow-zinc-200/50 border-zinc-100">
-          {message && (
-            <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 text-sm ${message.type === 'success' ? 'bg-emerald-50 border border-emerald-100 text-emerald-600' : 'bg-red-50 border border-red-100 text-red-600'
-              }`}>
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <p>{message.text}</p>
+          {isRegistered ? (
+            <div className="text-center space-y-4 py-4">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Verification Email Sent</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                We've sent a verification email to <strong>{email}</strong>. Please verify your email before signing in.
+              </p>
+              <Link to="/login">
+                <Button variant="outline" className="w-full mt-4">
+                  Back to Login
+                </Button>
+              </Link>
             </div>
-          )}
-
-          {role === UserRole.CITIZEN && (
+          ) : (
             <>
-              <div className="flex justify-center w-full mb-6">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setMessage({ type: 'error', text: 'Google Sign-In failed' })}
-                  text="signup_with"
-                  shape="rectangular"
-                  theme="outline"
-                  size="large"
-                />
-              </div>
+              {message && (
+                <div className={`mb-6 p-4 rounded-xl flex items-start gap-3 text-sm ${message.type === 'success' ? 'bg-emerald-50 border border-emerald-100 text-emerald-600' : 'bg-red-50 border border-red-100 text-red-600'
+                  }`}>
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p>{message.text}</p>
+                </div>
+              )}
 
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-zinc-200" />
+              {role === UserRole.CITIZEN && (
+                <>
+                  <div className="flex justify-center w-full mb-6">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setMessage({ type: 'error', text: 'Google Sign-In failed' })}
+                      text="signup_with"
+                      shape="rectangular"
+                      theme="outline"
+                      size="large"
+                    />
+                  </div>
+
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-zinc-200" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-zinc-500">Or continue with email</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="flex bg-zinc-50 p-1 rounded-xl mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setRole(UserRole.CITIZEN)}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.CITIZEN ? 'bg-white text-[#000000] shadow-sm' : 'text-zinc-500'
+                      }`}
+                  >
+                    {t('common.citizen')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole(UserRole.STAFF)}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.STAFF ? 'bg-white text-[#000000] shadow-sm' : 'text-zinc-500'
+                      }`}
+                  >
+                    {t('common.staff')}
+                  </button>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-zinc-500">Or continue with email</span>
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">{t('common.fullName')}</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="John Doe"
+                      className="pl-10"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      className="pl-10"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="password">{t('common.password')}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pl-10 pr-10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm">{t('common.confirmPassword')}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <Input
+                      id="confirm"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pl-10 pr-10"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full h-12 text-base">
+                  {t('common.createAccount')}
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </form>
             </>
           )}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="flex bg-zinc-50 p-1 rounded-xl mb-6">
-              <button
-                type="button"
-                onClick={() => setRole(UserRole.CITIZEN)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.CITIZEN ? 'bg-white text-[#000000] shadow-sm' : 'text-zinc-500'
-                  }`}
-              >
-                {t('common.citizen')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole(UserRole.STAFF)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${role === UserRole.STAFF ? 'bg-white text-[#000000] shadow-sm' : 'text-zinc-500'
-                  }`}
-              >
-                {t('common.staff')}
-              </button>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="name">{t('common.fullName')}</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  className="pl-10"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="pl-10"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="password">{t('common.password')}</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="confirm">{t('common.confirmPassword')}</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <Input
-                  id="confirm"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <Button type="submit" className="w-full h-12 text-base">
-              {t('common.createAccount')}
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </form>
         </Card>
 
         <p className="text-center mt-8 text-sm text-zinc-600">
           {t('common.alreadyAccount')}{' '}
           <Link to="/login" className="font-bold text-[#000000] hover:underline">{t('common.login')}</Link>
         </p>
+      </motion.div>
+    </div>
+  );
+};
+
+export const VerifyEmailPage: React.FC = () => {
+  const { token } = useParams<{ token: string }>();
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const verifyToken = async () => {
+      if (!token) {
+        setStatus('error');
+        setErrorMessage('Missing verification token.');
+        return;
+      }
+      try {
+        const res = await authApi.verifyEmail(token);
+        if (res.success) {
+          setStatus('success');
+        } else {
+          setStatus('error');
+          setErrorMessage(res.message || 'Invalid or expired email verification token.');
+        }
+      } catch (err: any) {
+        setStatus('error');
+        setErrorMessage(err.response?.data?.message || 'Invalid or expired email verification token.');
+      }
+    };
+
+    verifyToken();
+  }, [token]);
+
+  return (
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-6 pt-24">
+      <AuthHeader />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-10 flex flex-col items-center">
+          <Logo variant="vertical" iconSize="w-16 h-16" textSize="text-4xl" />
+          <h1 className="text-3xl font-bold text-zinc-900 mt-6">Email Verification</h1>
+          <p className="text-zinc-500 mt-2">Confirming your FixMyCity account</p>
+        </div>
+
+        <Card className="p-8 shadow-xl shadow-zinc-200/50 border-zinc-100">
+          {status === 'verifying' && (
+            <div className="text-center space-y-4 py-6">
+              <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <h3 className="text-lg font-bold text-slate-900">Verifying Your Email...</h3>
+              <p className="text-sm text-slate-500">Please wait while we confirm your verification link.</p>
+            </div>
+          )}
+
+          {status === 'success' && (
+            <div className="text-center space-y-4 py-4">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Email Verified Successfully!</h3>
+              <p className="text-sm text-slate-600">Your email address has been verified. You can now log into your account.</p>
+              <Link to="/login">
+                <Button className="w-full mt-4">
+                  Go to Login
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {status === 'error' && (
+            <div className="text-center space-y-4 py-4">
+              <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Verification Failed</h3>
+              <p className="text-sm text-slate-600">{errorMessage || 'The verification link is invalid or has expired.'}</p>
+              <Link to="/login">
+                <Button variant="outline" className="w-full mt-4">
+                  Back to Login
+                </Button>
+              </Link>
+            </div>
+          )}
+        </Card>
       </motion.div>
     </div>
   );

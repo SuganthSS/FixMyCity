@@ -111,12 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true, message: 'Your staff account is pending admin approval.' };
       }
 
-      // Auto-login citizen
-      const mappedUser = mapUser(data);
-      localStorage.setItem('fixmycity_token', data.token);
-      localStorage.setItem('fixmycity_user', JSON.stringify(mappedUser));
-      setUser(mappedUser);
-      return { success: true };
+      // Do NOT auto-login user until email is verified
+      return {
+        success: true,
+        message: data.message || "We've sent a verification email to your inbox. Please verify your email before signing in.",
+      };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Registration failed. Please try again.';
       return { success: false, message };
