@@ -17,9 +17,11 @@ import { ComplaintDetailsPage } from './app/ComplaintDetails';
 import { AdminDashboard } from './app/AdminDashboard';
 import { StaffDashboard } from './app/StaffDashboard';
 import { StaffMapPage } from './app/StaffMapPage';
+import { StaffAssignedPage, StaffUpdateStatusPage, StaffHistoryPage } from './app/StaffPages';
 import { HODDashboard } from './app/HODDashboard';
 import { HODMapPage } from './app/HODMapPage';
 import { HODMessagesPage } from './app/HODMessagesPage';
+import { HODComplaintsPage, HODUnassignedPage, HODAssignedPage, HODStaffManagementPage } from './app/HODPages';
 import { AdminComplaintsPage } from './app/AdminComplaints';
 import { AdminMapPage } from './app/AdminMapPage';
 import { AdminUsersPage } from './app/AdminUsersPage';
@@ -203,6 +205,21 @@ export default function App() {
             <Layout><StaffDashboard /></Layout>
           </ProtectedRoute>
         } />
+        <Route path="/staff/assigned" element={
+          <ProtectedRoute role={UserRole.STAFF}>
+            <Layout><StaffAssignedPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/staff/update-status" element={
+          <ProtectedRoute role={UserRole.STAFF}>
+            <Layout><StaffUpdateStatusPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/staff/history" element={
+          <ProtectedRoute role={UserRole.STAFF}>
+            <Layout><StaffHistoryPage /></Layout>
+          </ProtectedRoute>
+        } />
         <Route path="/staff/map" element={
           <ProtectedRoute role={UserRole.STAFF}>
             <Layout><StaffMapPage /></Layout>
@@ -218,6 +235,26 @@ export default function App() {
         <Route path="/hod/dashboard" element={
           <ProtectedRoute role={UserRole.HOD}>
             <Layout><HODDashboard /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/hod/complaints" element={
+          <ProtectedRoute role={UserRole.HOD}>
+            <Layout><HODComplaintsPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/hod/unassigned" element={
+          <ProtectedRoute role={UserRole.HOD}>
+            <Layout><HODUnassignedPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/hod/assigned" element={
+          <ProtectedRoute role={UserRole.HOD}>
+            <Layout><HODAssignedPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/hod/staff-management" element={
+          <ProtectedRoute role={UserRole.HOD}>
+            <Layout><HODStaffManagementPage /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/hod/messages" element={

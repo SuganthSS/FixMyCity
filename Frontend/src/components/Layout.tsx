@@ -16,7 +16,9 @@ import {
   Clock,
   Shield,
   ShieldCheck,
-  Map
+  Map,
+  RefreshCw,
+  History
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
@@ -65,13 +67,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const staffLinks = [
     { to: '/staff/dashboard', icon: LayoutDashboard, label: t('common.staffDashboard') },
+    { to: '/staff/assigned', icon: ClipboardList, label: 'Assigned Complaints' },
+    { to: '/staff/update-status', icon: RefreshCw, label: 'Update Status' },
+    { to: '/staff/history', icon: History, label: 'Complaint History' },
     { to: '/staff/map', icon: Map, label: t('common.mapView') },
-    { to: '/profile', icon: User, label: t('common.profile') },
     { to: '/staff/messages', icon: MessageSquare, label: t('common.messages') },
+    { to: '/profile', icon: User, label: t('common.profile') },
   ];
 
   const hodLinks = [
     { to: '/hod/dashboard', icon: LayoutDashboard, label: 'HOD Dashboard' },
+    { to: '/hod/complaints', icon: ClipboardList, label: 'Complaints' },
+    { to: '/hod/unassigned', icon: AlertCircle, label: 'Unassigned Complaints' },
+    { to: '/hod/assigned', icon: ShieldCheck, label: 'Assigned Complaints' },
+    { to: '/hod/staff-management', icon: Users, label: 'Staff Management' },
     { to: '/hod/map', icon: Map, label: t('common.mapView') },
     { to: '/hod/messages', icon: MessageSquare, label: 'Messages' },
     { to: '/profile', icon: User, label: t('common.profile') },
