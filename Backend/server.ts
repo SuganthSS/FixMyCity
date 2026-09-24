@@ -26,10 +26,12 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 import { checkSmtpStatus } from './server/services/emailService.ts';
+import { migrateNonCitizenEmailVerification } from './server/scripts/migrateEmailVerification.ts';
 
 async function startServer() {
   // Connect to MongoDB
   await connectDB();
+  await migrateNonCitizenEmailVerification();
 
   const app = express();
   const PORT = process.env.PORT || 5000;

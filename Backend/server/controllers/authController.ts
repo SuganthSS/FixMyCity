@@ -28,40 +28,63 @@ const registerUser = async (req: Request, res: Response) => {
     return;
   }
 
-  // Generate unhashed verification token for email link
-  const verificationToken = crypto.randomBytes(32).toString('hex');
-  // Store SHA-256 hash of token in MongoDB
-  const hashedVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+  const targetRole = role || 'citizen';
+  const isCitizen = targetRole === 'citizen';
+
+  let verificationToken: string | undefined;
+  let hashedVerificationToken: string | undefined;
+  let verificationExpires: Date | undefined;
+
+  if (isCitizen) {
+    // Generate unhashed verification token for email link
+    verificationToken = crypto.randomBytes(32).toString('hex');
+    // Store SHA-256 hash of token in MongoDB
+    hashedVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiry
+  }
 
   const user = await User.create({
     name,
     email: normalizedEmail,
     password,
-    role: role || 'citizen',
-    isApproved: role === 'staff' ? false : true,
-    isEmailVerified: false,
-    emailVerificationToken: hashedVerificationToken,
-    emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours expiry
+    role: targetRole,
+    isApproved: targetRole === 'staff' ? false : true,
+    isEmailVerified: !isCitizen,
+    emailVerificationToken: isCitizen ? hashedVerificationToken : undefined,
+    emailVerificationExpires: isCitizen ? verificationExpires : undefined,
   });
 
   if (user) {
-    // Send email containing unhashed verification token
-    await sendEmailVerificationEmail({
-      email: user.email,
-      name: user.name,
-      verificationToken,
-    });
+    if (isCitizen && verificationToken) {
+      // Send email containing unhashed verification token
+      await sendEmailVerificationEmail({
+        email: user.email,
+        name: user.name,
+        verificationToken,
+      });
 
-    res.status(201).json({
-      success: true,
-      message: "We've sent a verification email to your inbox. Please verify your email before signing in.",
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isEmailVerified: false,
-      createdAt: user.createdAt,
-    });
+      res.status(201).json({
+        success: true,
+        message: "We've sent a verification email to your inbox. Please verify your email before signing in.",
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: false,
+        createdAt: user.createdAt,
+      });
+    } else {
+      res.status(201).json({
+        success: true,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: true,
+        createdAt: user.createdAt,
+        token: generateToken(user._id.toString()),
+      });
+    }
   } else {
     res.status(400).json({ message: 'Invalid user data' });
   }
@@ -88,8 +111,8 @@ const loginUser = async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if email is verified
-    if (!user.isEmailVerified) {
+    // Check if citizen email is verified
+    if (user.role === 'citizen' && !user.isEmailVerified) {
       res.status(403).json({
         success: false,
         message: 'Please verify your email before signing in.',
@@ -235,6 +258,15 @@ const verifyEmail = async (req: Request, res: Response) => {
     return;
   }
 
+  // Ensure only citizen accounts use email verification tokens
+  if (user.role !== 'citizen') {
+    res.status(400).json({
+      success: false,
+      message: 'Email verification is not required for this account.',
+    });
+    return;
+  }
+
   // Update verification status and clear token fields
   user.isEmailVerified = true;
   user.emailVerificationToken = undefined;
@@ -266,8 +298,8 @@ const resendVerification = async (req: Request, res: Response) => {
   const normalizedEmail = email.toLowerCase().trim();
   const user = await User.findOne({ email: normalizedEmail });
 
-  // If user does not exist or is already verified, return generic response to prevent user enumeration
-  if (!user || user.isEmailVerified) {
+  // If user does not exist, is not a citizen, or is already verified, return generic response to prevent user enumeration
+  if (!user || user.role !== 'citizen' || user.isEmailVerified) {
     res.json(genericResponse);
     return;
   }
