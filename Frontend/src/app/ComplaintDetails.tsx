@@ -55,8 +55,8 @@ export const ComplaintDetailsPage: React.FC = () => {
         </div>
         <h2 className="text-2xl font-bold text-zinc-900">Complaint not found</h2>
         <p className="text-zinc-500 mt-2">The report you are looking for doesn't exist or you don't have access.</p>
-        <Link to="/my-complaints" className="mt-8 inline-block">
-          <Button variant="outline">Back to My Complaints</Button>
+        <Link to={user?.role === 'staff' ? '/staff/dashboard' : user?.role === 'hod' ? '/hod/dashboard' : user?.role === 'admin' ? '/admin/complaints' : '/my-complaints'} className="mt-8 inline-block">
+          <Button variant="outline">Back to Dashboard</Button>
         </Link>
       </div>
     );
@@ -103,11 +103,15 @@ export const ComplaintDetailsPage: React.FC = () => {
     }
   };
 
+  const backLink = user?.role === 'staff' ? '/staff/dashboard' :
+                   user?.role === 'hod' ? '/hod/dashboard' :
+                   user?.role === 'admin' ? '/admin/complaints' : '/my-complaints';
+
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/my-complaints">
+          <Link to={backLink}>
             <Button variant="outline" size="icon" className="rounded-full">
               <ArrowLeft className="w-4 h-4" />
             </Button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -255,7 +256,9 @@ export const HODDashboard: React.FC = () => {
                   <tr key={c._id} className="hover:bg-zinc-50/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-sm text-zinc-900">{c.title}</p>
+                        <Link to={`/complaints/${c._id}`} className="font-bold text-sm text-zinc-900 hover:text-emerald-600 hover:underline">
+                          {c.title}
+                        </Link>
                         <span className="text-xs font-mono text-zinc-400 bg-zinc-50 px-2 py-1 rounded shrink-0">
                           #{c.complaintCode || c._id.substring(0, 8)}
                         </span>
@@ -328,7 +331,9 @@ export const HODDashboard: React.FC = () => {
                   <tr key={c._id} className="hover:bg-zinc-50/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-sm text-zinc-900">{c.title}</p>
+                        <Link to={`/complaints/${c._id}`} className="font-bold text-sm text-zinc-900 hover:text-emerald-600 hover:underline">
+                          {c.title}
+                        </Link>
                         <span className="text-xs font-mono text-zinc-400 bg-zinc-50 px-2 py-1 rounded shrink-0">
                           #{c.complaintCode || c._id.substring(0, 8)}
                         </span>
