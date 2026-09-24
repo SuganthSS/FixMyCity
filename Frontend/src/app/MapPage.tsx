@@ -12,8 +12,8 @@ export const MapPage: React.FC = () => {
   const { t } = useTranslation();
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const CHENNAI_CENTER: [number, number] = [13.0827, 80.2707];
-  const CHENNAI_BOUNDS: [[number, number], [number, number]] = [[12.7, 79.8], [13.4, 80.7]];
+  const INDIA_CENTER: [number, number] = [22.5937, 78.9629];
+  const INDIA_BOUNDS: [[number, number], [number, number]] = [[5.5, 66.0], [38.5, 99.0]];
   const [status, setStatus] = useState<'requesting' | 'granted' | 'denied' | 'error'>('requesting');
   const [loading, setLoading] = useState(true);
 
@@ -77,16 +77,8 @@ export const MapPage: React.FC = () => {
   }, [complaints, userLocation]);
 
   const mapBounds = useMemo(() => {
-    if (!userLocation) return CHENNAI_BOUNDS;
-    const [[swLat, swLng], [neLat, neLng]] = getBoundingBox(userLocation[0], userLocation[1], 25);
-    
-    // Clamp bounds to Chennai limits
-    const clampedSwLat = Math.max(swLat, CHENNAI_BOUNDS[0][0]);
-    const clampedSwLng = Math.max(swLng, CHENNAI_BOUNDS[0][1]);
-    const clampedNeLat = Math.min(neLat, CHENNAI_BOUNDS[1][0]);
-    const clampedNeLng = Math.min(neLng, CHENNAI_BOUNDS[1][1]);
-    
-    return [[clampedSwLat, clampedSwLng], [clampedNeLat, clampedNeLng]] as [[number, number], [number, number]];
+    if (!userLocation) return undefined;
+    return getBoundingBox(userLocation[0], userLocation[1], 25);
   }, [userLocation]);
 
   return (
@@ -131,14 +123,14 @@ export const MapPage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center gap-3 p-4 bg-gray-50 text-[#374151] rounded-2xl border border-gray-200 shadow-sm">
                 <Info className="w-5 h-5" />
-                <p className="font-medium">Enable location to see issues near you (within 25km). Showing all issues sorted by priority.</p>
+                <p className="font-medium">Enable location to see issues near you (within 25km). Showing all issues across India sorted by priority.</p>
             </div>
             <Card className="overflow-hidden border-zinc-100 shadow-premium">
               <ComplaintsMapView 
                 complaints={filteredComplaints} 
-                center={CHENNAI_CENTER}
-                zoom={12}
-                bounds={CHENNAI_BOUNDS}
+                center={INDIA_CENTER}
+                zoom={5}
+                bounds={INDIA_BOUNDS}
               />
             </Card>
           </div>
@@ -152,14 +144,14 @@ export const MapPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-zinc-900">Map View</h3>
-                <p className="text-zinc-500">We couldn't determine your location. Showing all public issues.</p>
+                <p className="text-zinc-500">We couldn't determine your location. Showing all public issues across India.</p>
               </div>
               <div className="pt-4">
                  <ComplaintsMapView 
                    complaints={filteredComplaints} 
-                   center={CHENNAI_CENTER}
-                   zoom={12}
-                   bounds={CHENNAI_BOUNDS}
+                   center={INDIA_CENTER}
+                   zoom={5}
+                   bounds={INDIA_BOUNDS}
                  />
               </div>
             </div>

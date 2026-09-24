@@ -36,8 +36,8 @@ const SelectionIcon = L.divIcon({
   iconAnchor: [16, 32]
 });
 
-const CHENNAI_BOUNDS: [[number, number], [number, number]] = [[12.7, 79.8], [13.4, 80.7]];
-const CHENNAI_CENTER: [number, number] = [13.0827, 80.2707];
+const INDIA_CENTER: [number, number] = [22.5937, 78.9629];
+const INDIA_BOUNDS: [[number, number], [number, number]] = [[5.5, 66.0], [38.5, 99.0]];
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
@@ -49,13 +49,8 @@ const LocationMarker = ({ position, setPosition, setLocation }: {
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
-      const bounds = L.latLngBounds(CHENNAI_BOUNDS[0], CHENNAI_BOUNDS[1]);
-      if (bounds.contains(e.latlng)) {
-        setPosition([lat, lng]);
-        setLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-      } else {
-        alert("Please select a location within city limits.");
-      }
+      setPosition([lat, lng]);
+      setLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
     },
   });
 
@@ -136,16 +131,8 @@ export const ReportIssuePage: React.FC = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
         const { latitude, longitude } = pos.coords;
-        const latlng = L.latLng(latitude, longitude);
-        const bounds = L.latLngBounds(CHENNAI_BOUNDS[0], CHENNAI_BOUNDS[1]);
-
-        if (bounds.contains(latlng)) {
-          setCoords([latitude, longitude]);
-          setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-        } else {
-          setCoords([latitude, longitude]);
-          setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-        }
+        setCoords([latitude, longitude]);
+        setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
       });
     }
   };
@@ -308,11 +295,12 @@ export const ReportIssuePage: React.FC = () => {
               <Label>Select Location on Map</Label>
               <div className="h-56 w-full rounded-2xl overflow-hidden border border-zinc-200 relative">
                 <MapContainer
-                  center={coords || CHENNAI_CENTER}
-                  zoom={12}
+                  center={coords || INDIA_CENTER}
+                  zoom={coords ? 13 : 5}
+                  minZoom={4}
                   style={{ height: '100%', width: '100%' }}
-                  maxBounds={CHENNAI_BOUNDS}
-                  maxBoundsViscosity={1.0}
+                  maxBounds={INDIA_BOUNDS}
+                  maxBoundsViscosity={0.8}
                 >
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -17,8 +17,8 @@ const statusColorMap: Record<string, string> = {
   REJECTED: '#EF4444',
 };
 
-const CHENNAI_CENTER: [number, number] = [13.0827, 80.2707];
-const CHENNAI_BOUNDS: [[number, number], [number, number]] = [[12.7, 79.8], [13.4, 80.7]];
+const INDIA_CENTER: [number, number] = [22.5937, 78.9629];
+const INDIA_BOUNDS: [[number, number], [number, number]] = [[5.5, 66.0], [38.5, 99.0]];
 
 // Functional component to handle programmatic map updates
 const MapViewHandler: React.FC<{
@@ -30,22 +30,12 @@ const MapViewHandler: React.FC<{
   useEffect(() => {
     if (bounds) {
       const leafletBounds = L.latLngBounds(bounds[0], bounds[1]);
-      // Use fitBounds to zoom into the 25km area
+      // Use fitBounds to zoom into the requested bounds
       map.fitBounds(leafletBounds, { padding: [20, 20] });
-      // Restrict panning to this area
-      map.setMaxBounds(leafletBounds);
-      // Prevent zooming out beyond the 25km area
-      map.setMinZoom(12);
+    } else if (center) {
+      map.setView(center, 15);
     } else {
-      // Restore defaults for Chennai view
-      const leafletChennaiBounds = L.latLngBounds(CHENNAI_BOUNDS[0], CHENNAI_BOUNDS[1]);
-      map.setMaxBounds(leafletChennaiBounds);
-      map.setMinZoom(10);
-      if (center) {
-        map.setView(center, 15);
-      } else {
-        map.setView(CHENNAI_CENTER, 12);
-      }
+      map.setView(INDIA_CENTER, 5);
     }
   }, [map, bounds, center]);
 
@@ -142,13 +132,13 @@ export const ComplaintsMapView: React.FC<ComplaintsMapViewProps> = ({
   return (
     <div className="h-[600px] rounded-2xl border-4 border-white shadow-premium relative z-0 group">
       <MapContainer
-        center={center || CHENNAI_CENTER}
-        zoom={center ? 15 : 12}
+        center={center || INDIA_CENTER}
+        zoom={center ? 15 : 5}
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
-        minZoom={10}
-        maxBounds={CHENNAI_BOUNDS}
-        maxBoundsViscosity={1.0}
+        minZoom={4}
+        maxBounds={INDIA_BOUNDS}
+        maxBoundsViscosity={0.8}
         worldCopyJump={false}
         className="rounded-2xl"
       >

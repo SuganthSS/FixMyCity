@@ -44,8 +44,6 @@ export const HODMapPage: React.FC = () => {
         <ComplaintsMapView 
           complaints={complaints} 
           showCitizenInfo={false} 
-          center={[13.0827, 80.2707]}
-          zoom={12}
         />
       </Card>
     </div>
